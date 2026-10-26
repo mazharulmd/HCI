@@ -30,10 +30,11 @@ def risk_assessment(s: Scenario) -> dict[str, Any]:
     if s.permission in {"external_send", "write", "delete", "credential_access"}:
         score += 24
         reasons.append(f"The requested permission includes {s.permission.replace('_', ' ')}.")
-    if s.attack:
-        score += 30
-        reasons.append("The source contains an instruction that conflicts with the user's request.")
-    if any(term in s.source_excerpt.lower() for term in ("ignore previous", "system prompt", "secret", "password", "exfiltrate")):
+    excerpt = s.source_excerpt.lower()
+    if any(term in excerpt for term in ("ignore previous", "ignore prior", "ignore the user's request", "ignore the user")):
+        score += 16
+        reasons.append("The source contains language that attempts to override the user's instruction.")
+    if any(term in excerpt for term in ("system prompt", "secret", "password", "exfiltrate", "environment variables", "credentials")):
         score += 16
         reasons.append("The source contains a recognized prompt-injection or data-exfiltration cue.")
     score = min(score, 100)

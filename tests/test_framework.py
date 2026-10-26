@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from dataclasses import replace
 
 from trust_boundary_lab.app import app
 from trust_boundary_lab.core import make_decision, risk_assessment
@@ -20,6 +21,11 @@ def test_user_authorized_narrow_action_remains_approvable():
     scenario = get_scenario("delete_requested")
     assert risk_assessment(scenario)["level"] == "moderate"
     assert make_decision(scenario, "combined")["decision"] == "approve"
+
+
+def test_risk_assessment_does_not_use_evaluation_attack_label():
+    scenario = get_scenario("web_page_injection")
+    assert risk_assessment(scenario) == risk_assessment(replace(scenario, attack=False))
 
 
 def test_review_api_returns_explicit_gate_result():

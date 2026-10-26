@@ -33,7 +33,7 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     rows, summaries = run_evaluation()
     with (out / "scenario_results.csv").open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["scenario_id", "condition", "decision", "tool_executed", "attack_success", "safe_outcome", "risk_score", "risk_level", "decision_reason"])
+        writer = csv.DictWriter(f, fieldnames=["scenario_id", "condition", "decision", "tool_executed", "attack_success", "safe_outcome", "risk_score", "risk_level", "decision_reason"], lineterminator="\n")
         writer.writeheader()
         for r in rows:
             writer.writerow({**{k: r[k] for k in writer.fieldnames if k not in {"risk_score", "risk_level"}}, "risk_score": r["risk"]["score"], "risk_level": r["risk"]["level"]})

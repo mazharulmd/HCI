@@ -29,9 +29,9 @@ We hypothesize that combined provenance, permission scope, risk rationale, and c
 \section{System and design}
 For a fixture $x$, the prototype computes an explainable score
 \[
-R(x)=\min\left(100,8+22U(x)+24C(x)+30I(x)+16K(x)\right),
+R(x)=\min\left(100,8+22U(x)+24C(x)+16O(x)+16K(x)\right),
 \]
-where $U$ indicates untrusted provenance, $C$ indicates a consequential permission, $I$ indicates a fixture-labeled injection, and $K$ indicates a small set of text cues. The constants are engineering defaults, not fitted weights or calibrated probabilities. The UI displays the source and action explicitly; the policy layer blocks a call when combined-condition risk is at least 60 or when untrusted content proposes non-read permission. All execution is simulated.
+where $U$ indicates untrusted provenance, $C$ indicates a consequential permission, $O$ indicates text matching a small set of instruction-override cues, and $K$ indicates data-exposure terms. The policy does not read the fixture attack label. The constants are engineering defaults, not fitted weights or calibrated probabilities. The UI displays the source and action explicitly; the policy layer blocks a call when combined-condition risk is at least 60 or when untrusted content proposes non-read permission. All execution is simulated.
 
 The design patterns are: (1) show provenance adjacent to the proposed action; (2) name the permission and affected destination/data; (3) explain risk factors rather than relying on color alone; (4) require a deliberate choice before consequential execution; and (5) preserve narrow, explicit user authorization. The current prototype implements only fixture-level examples of these patterns and is not a deployable security boundary.
 
