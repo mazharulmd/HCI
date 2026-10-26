@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clear-agent-mediation"
+version = "1.0.0"
+description = "CLEAR: human-centred, provenance-aware mediation of LLM agent tool calls against prompt injection"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = ["pyyaml>=6.0"]
+
+[project.optional-dependencies]
+experiments = ["agentdojo==0.1.35", "numpy>=1.26", "pandas>=2.1", "scipy>=1.11", "statsmodels>=0.14", "matplotlib>=3.8"]
+test = ["pytest>=8.0"]
+
+[tool.setuptools]
+packages = ["clear"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

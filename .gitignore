@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+external/
+results/raw/
+*.egg-info/
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/*.toc
+user_study_logs/
+.DS_Store

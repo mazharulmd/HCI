@@ -1,0 +1,36 @@
+# CLEAR default configuration (FROZEN before held-out evaluation; see
+# docs/research_design.md). All weights are set a priori from the design
+# rationale in the paper (Sec. 4), not fitted to benchmark outcomes.
+
+risk:
+  # noisy-OR weights: P(action not intended | evidence)
+  w_taint: 0.90        # target argument originates from untrusted content
+  w_exfil: 0.80        # private data flows to a non-endorsed target
+  w_deviation: 0.70    # capability outside the user's intent envelope
+  w_injection: 0.60    # untrusted content the action depends on looks like an instruction
+  # taint levels per provenance origin of a target argument
+  taint_external: 1.0
+  taint_unattributed: 0.5
+  taint_value_external: 0.4   # magnitude arg (amount/password/date) copied from untrusted text
+  taint_content_external: 0.4 # link / address / account planted in outgoing content by untrusted text
+  # deviation level when the user delegated instruction-following to a source
+  deviation_delegated: 0.5
+  # weight of injection-likeness of sources merely *read* in the episode
+  # (control-flow influence that string matching cannot attribute)
+  injection_context_weight: 0.5
+
+tiers:
+  # R = s(f) * P(unintended); tiers on R
+  notify: 0.15     # >= notify   : non-blocking ambient notice (logged, undo offered)
+  confirm: 0.35    # >= confirm  : blocking confirmation with provenance evidence
+  force: 0.70      # >= force    : block + cognitive-forcing override
+  # an irreversible action that reaches NOTIFY is promoted to CONFIRM
+  promote_irreversible_notify: true
+
+provenance:
+  min_value_len: 3          # shorter values are not attributable (e.g. "1", "no")
+  shingle_words: 5          # word n-gram size for content-overlap
+  content_overlap_threshold: 0.30
+
+injection_signal:
+  threshold_source_flag: 0.50   # used for UI highlighting and the detector baseline
