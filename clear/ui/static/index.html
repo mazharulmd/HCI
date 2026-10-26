@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLEAR Agent Console</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo" aria-hidden="true">&#9673;</span> CLEAR <span class="muted">agent console</span></div>
+  <div class="meta"><span id="condition-badge" class="badge"></span><span id="progress" class="muted"></span></div>
+</header>
+
+<main class="layout">
+  <section class="panel task" aria-labelledby="task-h">
+    <h2 id="task-h">Your request</h2>
+    <p id="prompt" class="prompt"></p>
+    <div id="envelope" class="envelope" hidden>
+      <h3>What the agent may do <span class="hint">(intent envelope &ndash; edit before starting)</span></h3>
+      <div id="caps" class="chips" role="group" aria-label="Allowed action types"></div>
+      <h3>People, accounts and items you named</h3>
+      <div id="entities" class="chips"></div>
+      <p id="delegation" class="note" hidden>You asked the agent to follow instructions found in your data. Actions derived from that data will be shown to you.</p>
+    </div>
+    <button id="start" class="primary">Start agent</button>
+  </section>
+
+  <section class="panel timeline" aria-labelledby="tl-h">
+    <h2 id="tl-h">Agent activity</h2>
+    <ol id="steps" class="steps" aria-live="polite"></ol>
+    <div id="done" class="done" hidden>
+      <p>Task finished.</p>
+      <button id="next" class="primary">Next task</button>
+    </div>
+  </section>
+
+  <aside class="panel audit" aria-labelledby="audit-h">
+    <h2 id="audit-h">Action log</h2>
+    <ul id="audit" class="audit-list"></ul>
+    <div class="legend">
+      <span class="tier ALLOW">allowed</span><span class="tier NOTIFY">notice</span>
+      <span class="tier CONFIRM">asked you</span><span class="tier FORCE">high risk</span>
+    </div>
+  </aside>
+</main>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form method="dialog" id="dlg-form">
+    <div id="dlg-body"></div>
+    <div class="dlg-actions">
+      <button value="deny" id="btn-deny" class="secondary">Deny</button>
+      <button value="approve" id="btn-approve" class="primary">Approve</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

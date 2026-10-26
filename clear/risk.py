@@ -154,6 +154,9 @@ class RiskModel:
             quote = f": \"{_short(span.text, 70)}\"" if span else ""
             reasons.append(f"Content read from {top.label} contains text addressed to the AI agent{quote}")
             evidence.add(top.sid)
+        elif top is not None and top.injection_score > 0:
+            reasons.append(f"Content read from {top.label} contains some instruction-like phrasing (weak signal)")
+            evidence.add(top.sid)
         return iota_attr, iota_ctx
 
     # ------------------------------------------------------------------ main
@@ -184,6 +187,8 @@ class RiskModel:
         p = 1.0 - remaining
         risk = spec.sensitivity * p
         tier = self.tier_of(risk, spec)
+        if tier == Tier.CONFIRM and risk < self.t["confirm"]:
+            reasons.append("This action cannot be undone, so it needs your confirmation")
         feats = {"s": spec.sensitivity, **x, "iota_attr": iota_attr, "iota_ctx": iota_ctx}
         return Assessment(spec.name, args, spec, feats, p, risk, tier, prov, reasons, sorted(evidence))
 

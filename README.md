@@ -1,0 +1,129 @@
+# CLEAR: Human-Centred, Provenance-Aware Mediation of AI-Agent Tool Calls Against Prompt Injection
+
+**Human-Computer Interaction for Secure AI Tool Usage: Design Patterns Against Prompt Injection.** This repository holds the research code, data, experiments and manuscript.
+
+CLEAR (*Contextual, Lineage-aware, Escalating Agent-action Review*) sits between an LLM agent and its tools. It:
+
+* records the **provenance** of everything the agent reads and attributes **every argument** of every proposed tool call to *your request*, *a trusted record*, *specific external content* or *nothing*;
+* scores **contextual risk** from interpretable features: harm potential, taint, private-data egress, deviation from a user-editable **intent envelope**, and instruction-likeness of untrusted content;
+* escalates through four tiers: **ALLOW → NOTIFY → CONFIRM → FORCE**. It asks the user only when needed and shows *where each value came from*. For the rarest, highest-risk tier it uses a differently shaped **cognitive-forcing** dialog;
+* has an **escalation floor**: no attacker-controlled text can stop an externally sourced payment, e-mail, share or post from reaching a confirmation (Proposition 1 in the paper, property-tested in `tests/test_risk.py`).
+
+![CLEAR forcing dialog](figures/ui_force_dialog.png)
+
+## Headline results (held-out, real agent trajectories)
+
+Replaying **24,648 recorded AgentDojo trajectories** of **22 LLM agents** and five published defences:
+
+| Policy | Attack success | Benign utility | Dialogs / benign task |
+|---|---|---|---|
+| No defence | 16.5 % | 54.4 % | 0 |
+| Lexical injection detector (abort) | 0.1 % (utility under attack 5.2 %) | 54.4 % | 0 |
+| Strict information-flow policy (auto) | 2.6 % | 31.8 % | 0 |
+| Confirm every action (ideal user) | 0.5 % | 54.4 % | 0.79 |
+| **CLEAR (ideal user)** | **0.7 %** | **54.4 %** | **0.38** |
+| **CLEAR (no human, escalations denied)** | **0.7 %** | 35.2 % | 0.38 |
+
+* 51 % fewer dialogs than confirm-all (Wilcoxon p = 1.6×10⁻¹¹⁶). 74 % of benign tasks need no dialog at all.
+* Against a **detector-evading attacker**, CLEAR stays at 0.9 % ASR. A provenance-free mediator cannot get below 9.3 % at any threshold, and the lexical detector reverts to 16.5 %.
+* A parametric, habituation-aware user model (**simulation, not human data**) predicts lower end-to-end compromise than confirm-all in 100 % of 243 parameter settings.
+
+All numbers are produced by the code in this repository: see `results/stats.json`, `results/tables/` and the manuscript in `paper/main.pdf`.
+
+> **What was *not* done.** No human-subject data were collected. The user study is a complete, pre-registered **protocol** with a working apparatus (`docs/user_study/`, `clear/ui/`), but it has not been run. The evaluation replays recorded trajectories. No new live LLM runs were made (no API budget or GPU was available in the research environment).
+
+## Repository layout
+
+```
+clear/                      the framework (pip-installable, dependency: pyyaml)
+  provenance.py               provenance ledger, argument attribution, URL canonicalisation
+  envelope.py                 intent-envelope compiler (LLM-free, injection-proof)
+  signals.py                  transparent instruction-likeness scorer
+  risk.py                     features, noisy-OR risk, escalation tiers (Proposition 1)
+  mediator.py                 the interposition API: start_task / observe_result / assess / decide
+  baselines.py                confirm-all, strict IFC, task-scoped allowlist, injection detector
+  human_model.py              SDT + habituation model of confirmation decisions (simulation)
+  ui/                         agent console + user-study apparatus (stdlib server, vanilla JS)
+configs/
+  clear_default.yaml          frozen weights and thresholds
+  tool_manifest.yaml          declared tool capabilities (P0)
+experiments/
+  traces.py                   AgentDojo trace loader + environment replayer
+  evaluate.py                 trace-replay evaluation of all policies, ablations, labels
+  human_sim.py                simulated human-in-the-loop analysis
+  analyze.py                  statistics, tables, figures, LaTeX macros
+  build_ui_scenarios.py       builds UI/user-study scenarios from real traces
+data/
+  derived/                    compressed per-episode and per-call results (see data/README.md)
+  ui_answer_key.json          ground truth for the 16 study scenarios (never sent to the browser)
+results/                    stats.json, tables/*.csv|tex, human_sim.csv, logs
+figures/                    all figures (PDF + PNG) and UI screenshots
+paper/                      LaTeX manuscript (main.tex, references.bib, generated/ tables)
+docs/
+  research_design.md          gap, contributions, RQs, hypotheses, architecture
+  development_log.md          pre-registration: what was changed on the development split
+  literature/                 structured review + reference verification log
+  user_study/                 protocol, consent form, debriefing
+tests/                      49 automated tests (unit, property, UI, integration)
+scripts/                    fetch_agentdojo.sh, run_all.sh, build_paper.sh
+```
+
+## Installation
+
+Requires Python ≥ 3.10.
+
+```bash
+git clone https://github.com/mazharulmd/HCI.git && cd HCI
+python -m pip install -r requirements.txt     # agentdojo==0.1.35, numpy, pandas, scipy, statsmodels, matplotlib, pytest
+python -m pytest -q                           # 49 tests (the integration tests skip if traces are absent)
+```
+
+LaTeX (for the paper): `texlive-latex-extra`, `texlive-science`, `latexmk`.
+
+## Reproducing the paper
+
+**Fast path (minutes)** uses the shipped derived data:
+```bash
+python experiments/human_sim.py --sessions 1000   # simulated users (~1 min)
+python experiments/analyze.py                     # statistics, tables, figures, LaTeX macros
+scripts/build_paper.sh                            # -> paper/main.pdf
+```
+
+**Full path (≈1 h on 4 cores)** re-runs the trace replay from the raw AgentDojo trajectories:
+```bash
+scripts/run_all.sh
+```
+This fetches AgentDojo at the pinned commit `089ed468…`, replays all 29 pipelines (`experiments/evaluate.py`), then runs the simulation, analysis and paper build. Each stage is deterministic: bootstraps and simulations are seeded.
+
+## Using CLEAR in your own agent
+
+```python
+from clear import Mediator, ToolCall
+
+m = Mediator.default()                       # loads configs/clear_default.yaml + tool_manifest.yaml
+m.start_task(user_prompt, system_prompt)
+for call in agent_loop():                    # each proposed tool call, before execution
+    a = m.assess(ToolCall(call.name, call.args))
+    d = m.decide(a, human=my_dialog)         # my_dialog(assessment, mediator) -> bool
+    if d.execute:
+        out = run_tool(call)
+        m.observe_result(ToolCall(call.name, call.args), out)
+```
+`a.tier`, `a.risk`, `a.reasons` and `a.arg_provenance` carry everything needed to render a dialog. Tools not in the manifest fail closed.
+
+## Interactive console / user-study apparatus
+
+```bash
+python -m clear.ui.server --port 8765
+# open http://127.0.0.1:8765/?condition=clear&pid=P001
+# conditions: clear | clear_generic | confirm_all | none
+```
+Decisions, response times, forcing answers, envelope edits and undo events are logged to `user_study_logs/<pid>.jsonl`. The post-task questionnaire (SUS, NASA-TLX raw, trust in automation) is at `questionnaire.html`.
+
+## Citing
+
+See `CITATION.cff`. Third-party data: AgentDojo traces and environments (MIT licence, © ETH Zurich SPY Lab) are fetched, not redistributed.
+
+## Licence
+
+MIT (see `LICENSE`).

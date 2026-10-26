@@ -1,0 +1,8 @@
+comparison,metric,n10,n01,p,diff,n,p_holm
+clear:oracle vs clear_no_provenance:oracle,s,0,396,1.2392294127517818e-119,-0.026639757820383452,14865,8.674605889262473e-119
+clear:oracle vs clear_no_taint:oracle,s,0,302,2.4545467326488633e-91,-0.020316178943827784,14865,1.472728039589318e-90
+clear:oracle vs clear_no_exfil:oracle,s,0,0,1.0,0.0,14865,1.0
+clear:oracle vs clear_no_deviation:oracle,s,0,104,9.860761315262648e-32,-0.006996300033636058,14865,4.930380657631324e-31
+clear:oracle vs clear_no_injection:oracle,s,0,29,3.725290298461914e-09,-0.0019508913555331305,14865,1.4901161193847656e-08
+clear:oracle vs clear_single_tier:oracle,s,12,0,0.00048828125,0.0008072653884964682,14865,0.00146484375
+clear:oracle vs clear_gt_envelope:oracle,s,0,0,1.0,0.0,14865,1.0

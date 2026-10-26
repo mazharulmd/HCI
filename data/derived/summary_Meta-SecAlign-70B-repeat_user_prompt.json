@@ -1,0 +1,18 @@
+{
+  "model": "Meta-SecAlign-70B-repeat_user_prompt",
+  "version": "v1.2",
+  "version_probe": {
+    "v1": 0.6371428571428571,
+    "v1.1": 0.6457142857142857,
+    "v1.1.1": 0.6571428571428571,
+    "v1.1.2": 0.6571428571428571,
+    "v1.2": 1.0,
+    "v1.2.1": 1.0,
+    "v1.2.2": 0.9942857142857143
+  },
+  "episodes": 1046,
+  "errors": 0,
+  "replay_agreement_utility": 1.0,
+  "replay_agreement_security": 1.0,
+  "seconds": 116.4
+}

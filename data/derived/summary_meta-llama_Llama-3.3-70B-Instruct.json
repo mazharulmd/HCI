@@ -1,0 +1,18 @@
+{
+  "model": "meta-llama_Llama-3.3-70B-Instruct",
+  "version": "v1.2",
+  "version_probe": {
+    "v1": 0.6485714285714286,
+    "v1.1": 0.6514285714285715,
+    "v1.1.1": 0.6571428571428571,
+    "v1.1.2": 0.6571428571428571,
+    "v1.2": 1.0,
+    "v1.2.1": 1.0,
+    "v1.2.2": 1.0
+  },
+  "episodes": 1046,
+  "errors": 0,
+  "replay_agreement_utility": 1.0,
+  "replay_agreement_security": 1.0,
+  "seconds": 163.6
+}

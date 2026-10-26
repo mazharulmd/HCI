@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post-Task Questionnaire</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; margin: 0 0 16px; padding: 12px 14px; background: var(--panel); }
+  legend { font-weight: 700; padding: 0 6px; }
+  .q { margin: 10px 0; }
+  .q p { margin: 0 0 4px; }
+  .scale { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; }
+  .scale label { display: flex; align-items: center; gap: 3px; }
+  input[type=range] { width: 100%; }
+  .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header class="topbar"><div class="brand">CLEAR <span class="muted">questionnaire</span></div></header>
+<main>
+  <form id="qform">
+    <fieldset id="sus"><legend>System Usability Scale (Brooke, 1996)</legend></fieldset>
+    <fieldset id="tlx"><legend>Workload &ndash; NASA-TLX, raw (Hart &amp; Staveland, 1988)</legend></fieldset>
+    <fieldset id="trust"><legend>Trust in the agent system (Jian, Bisantz &amp; Drury, 2000)</legend></fieldset>
+    <fieldset><legend>Open questions</legend>
+      <div class="q"><p>When you were asked to review an action, what information did you use to decide?</p><textarea name="open_info" rows="3" style="width:100%"></textarea></div>
+      <div class="q"><p>Was anything confusing or annoying about the review dialogs?</p><textarea name="open_annoy" rows="3" style="width:100%"></textarea></div>
+    </fieldset>
+    <button class="primary" type="submit">Submit</button>
+    <p id="msg" class="note"></p>
+  </form>
+</main>
+<script>
+"use strict";
+const params = new URLSearchParams(location.search);
+const PID = /^[A-Za-z0-9_-]{1,32}$/.test(params.get("pid") || "") ? params.get("pid") : "demo";
+const COND = params.get("condition") || "";
+const SUS = [
+  "I think that I would like to use this system frequently.",
+  "I found the system unnecessarily complex.",
+  "I thought the system was easy to use.",
+  "I think that I would need the support of a technical person to be able to use this system.",
+  "I found the various functions in this system were well integrated.",
+  "I thought there was too much inconsistency in this system.",
+  "I would imagine that most people would learn to use this system very quickly.",
+  "I found the system very cumbersome to use.",
+  "I felt very confident using the system.",
+  "I needed to learn a lot of things before I could get going with this system.",
+];
+const TLX = [
+  ["mental", "Mental demand: How mentally demanding was the task?", "Very low", "Very high"],
+  ["physical", "Physical demand: How physically demanding was the task?", "Very low", "Very high"],
+  ["temporal", "Temporal demand: How hurried or rushed was the pace of the task?", "Very low", "Very high"],
+  ["performance", "Performance: How successful were you in accomplishing what you were asked to do?", "Perfect", "Failure"],
+  ["effort", "Effort: How hard did you have to work to accomplish your level of performance?", "Very low", "Very high"],
+  ["frustration", "Frustration: How insecure, discouraged, irritated, stressed, and annoyed were you?", "Very low", "Very high"],
+];
+const TRUST = [
+  "The system is deceptive.", "The system behaves in an underhanded manner.", "I am suspicious of the system's intent, action, or outputs.",
+  "I am wary of the system.", "The system's actions will have a harmful or injurious outcome.", "I am confident in the system.",
+  "The system provides security.", "The system has integrity.", "The system is dependable.", "The system is reliable.",
+  "I can trust the system.", "I am familiar with the system.",
+];
+function likert(container, name, text, n, lo, hi) {
+  const q = document.createElement("div"); q.className = "q";
+  const p = document.createElement("p"); p.textContent = text; q.append(p);
+  const s = document.createElement("div"); s.className = "scale";
+  for (let i = 1; i <= n; i++) {
+    const l = document.createElement("label"); const r = document.createElement("input");
+    r.type = "radio"; r.name = name; r.value = i; r.required = true; l.append(r, document.createTextNode(String(i))); s.append(l);
+  }
+  q.append(s);
+  const e = document.createElement("div"); e.className = "ends";
+  e.append(Object.assign(document.createElement("span"), { textContent: lo }), Object.assign(document.createElement("span"), { textContent: hi }));
+  q.append(e); container.append(q);
+}
+SUS.forEach((t, i) => likert(document.getElementById("sus"), `sus_${i + 1}`, `${i + 1}. ${t}`, 5, "Strongly disagree", "Strongly agree"));
+TLX.forEach(([k, t, lo, hi]) => {
+  const q = document.createElement("div"); q.className = "q";
+  const p = document.createElement("p"); p.textContent = t;
+  const r = document.createElement("input"); r.type = "range"; r.min = 0; r.max = 100; r.step = 5; r.value = 50; r.name = `tlx_${k}`;
+  const e = document.createElement("div"); e.className = "ends";
+  e.append(Object.assign(document.createElement("span"), { textContent: lo }), Object.assign(document.createElement("span"), { textContent: hi }));
+  q.append(p, r, e); document.getElementById("tlx").append(q);
+});
+TRUST.forEach((t, i) => likert(document.getElementById("trust"), `trust_${i + 1}`, `${i + 1}. ${t}`, 7, "Not at all", "Extremely"));
+document.getElementById("qform").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const answers = Object.fromEntries(new FormData(ev.target).entries());
+  try {
+    await fetch("/api/questionnaire", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pid: PID, condition: COND, answers, t: Date.now() }) });
+    document.getElementById("msg").textContent = "Thank you - your answers were saved.";
+  } catch (e) {
+    document.getElementById("msg").textContent = "Could not save answers; please tell the experimenter.";
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+% ============================================================================
+% Verified bibliography. Every entry was checked against a bibliographic record
+% (Consensus/Semantic Scholar/OpenAlex record, publisher page, arXiv listing or
+% DBLP-equivalent page) on 2026-10-26; see docs/literature/verification_log.md.
+% Where the full author list could not be confirmed, entries use "and others".
+% DOIs are given only where they were seen in a verification record.
+% ============================================================================
+
+% ---------------------------------------------------------------- attacks & benchmarks
+@inproceedings{perez2022ignore,
+  title     = {Ignore Previous Prompt: Attack Techniques for Language Models},
+  author    = {Perez, F{\'a}bio and Ribeiro, Ian},
+  booktitle = {NeurIPS ML Safety Workshop},
+  year      = {2022},
+  note      = {arXiv:2211.09527}
+}
+@inproceedings{greshake2023not,
+  title     = {Not What You've Signed Up For: Compromising Real-World {LLM}-Integrated Applications with Indirect Prompt Injection},
+  author    = {Greshake, Kai and Abdelnabi, Sahar and Mishra, Shailesh and Endres, Christoph and Holz, Thorsten and Fritz, Mario},
+  booktitle = {Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security (AISec)},
+  year      = {2023}
+}
+@misc{liu2023houyi,
+  title  = {Prompt Injection Attack against {LLM}-Integrated Applications},
+  author = {Liu, Yi and others},
+  year   = {2023},
+  note   = {arXiv preprint}
+}
+@inproceedings{liu2024formalizing,
+  title     = {Formalizing and Benchmarking Prompt Injection Attacks and Defenses},
+  author    = {Liu, Yupei and Jia, Yuqi and Geng, Runpeng and Jia, Jinyuan and Gong, Neil Zhenqiang},
+  booktitle = {33rd USENIX Security Symposium},
+  pages     = {1831--1847},
+  year      = {2024}
+}
+@inproceedings{zhan2024injecagent,
+  title     = {{InjecAgent}: Benchmarking Indirect Prompt Injections in Tool-Integrated Large Language Model Agents},
+  author    = {Zhan, Qiusi and Liang, Zhixiang and Ying, Zifan and Kang, Daniel},
+  booktitle = {Findings of the Association for Computational Linguistics: ACL 2024},
+  year      = {2024}
+}
+@inproceedings{debenedetti2024agentdojo,
+  title     = {{AgentDojo}: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for {LLM} Agents},
+  author    = {Debenedetti, Edoardo and Zhang, Jie and Balunovi{\'c}, Mislav and Beurer-Kellner, Luca and Fischer, Marc and Tram{\`e}r, Florian},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track},
+  year      = {2024}
+}
+@inproceedings{yi2025bipia,
+  title     = {Benchmarking and Defending against Indirect Prompt Injection Attacks on Large Language Models},
+  author    = {Yi, Jingwei and others},
+  booktitle = {Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
+  year      = {2025}
+}
+@inproceedings{zhang2025asb,
+  title     = {Agent Security Bench ({ASB}): Formalizing and Benchmarking Attacks and Defenses in {LLM}-based Agents},
+  author    = {Zhang, Hanrong and others},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2025}
+}
+@inproceedings{zhan2025adaptive,
+  title     = {Adaptive Attacks Break Defenses Against Indirect Prompt Injection Attacks on {LLM} Agents},
+  author    = {Zhan, Qiusi and others},
+  booktitle = {Findings of the Association for Computational Linguistics: NAACL 2025},
+  year      = {2025}
+}
+@misc{abdelnabi2026always,
+  title  = {{AI} Agents May Always Fall for Prompt Injections},
+  author = {Abdelnabi, Sahar and others},
+  year   = {2026},
+  note   = {arXiv:2605.17634}
+}
+@misc{ma2026autodojo,
+  title  = {{AutoDojo}: A Generative Benchmark for Evaluating Prompt Injection Defenses in {LLM} Agents},
+  author = {Ma, Xinhang and others},
+  year   = {2026},
+  note   = {Preprint}
+}
+@misc{hofer2026automated,
+  title  = {Assessing Automated Prompt Injection Attacks in Agentic Environments},
+  author = {Hofer, David K. and others},
+  year   = {2026},
+  note   = {arXiv preprint}
+}
+@misc{chen2026autoinject,
+  title  = {Learning to Inject: Automated Prompt Injection via Reinforcement Learning},
+  author = {Chen, Xin and others},
+  year   = {2026},
+  note   = {arXiv preprint}
+}
+@misc{pandya2025attention,
+  title  = {May {I} have your Attention? Breaking Fine-Tuning based Prompt Injection Defenses using Architecture-Aware Attacks},
+  author = {Pandya, Nishit V. and others},
+  year   = {2025},
+  note   = {arXiv preprint}
+}
+@misc{alizadeh2025simple,
+  title  = {Simple Prompt Injection Attacks Can Leak Personal Data Observed by {LLM} Agents During Task Execution},
+  author = {Alizadeh, Meysam and others},
+  year   = {2025},
+  note   = {arXiv preprint}
+}
+@misc{wang2026landscape,
+  title  = {The Landscape of Prompt Injection Threats in {LLM} Agents: From Taxonomy to Analysis},
+  author = {Wang, Pei and others},
+  year   = {2026},
+  note   = {arXiv preprint}
+}
+@misc{shaw2026silent,
+  title  = {Silent Failures in Agentic Security Evaluation: A Validated Harness for Tool-Call Mediation Under Indirect Prompt Injection},
+  author = {Shaw, Animesh},
+  year   = {2026},
+  note   = {Preprint}
+}
+@article{khan2026evaluating,
+  title   = {Evaluating Indirect Prompt Injection Defenses in Tool-Using {LLM} Agents: Security, Utility, and Replication},
+  author  = {Khan, Adil and others},
+  journal = {Computers},
+  year    = {2026}
+}
+
+% ---------------------------------------------------------------- model-level / prompt-level defences
+@misc{hines2024spotlighting,
+  title  = {Defending Against Indirect Prompt Injection Attacks With Spotlighting},
+  author = {Hines, Keegan and others},
+  year   = {2024},
+  note   = {arXiv preprint}
+}
+@inproceedings{chen2025struq,
+  title     = {{StruQ}: Defending Against Prompt Injection with Structured Queries},
+  author    = {Chen, Sizhe and Piet, Julien and Sitawarin, Chawin and Wagner, David},
+  booktitle = {34th USENIX Security Symposium},
+  year      = {2025}
+}
+@inproceedings{chen2025secalign,
+  title     = {{SecAlign}: Defending Against Prompt Injection with Preference Optimization},
+  author    = {Chen, Sizhe and others},
+  booktitle = {Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security (CCS)},
+  year      = {2025}
+}
+@misc{chen2025metasecalign,
+  title  = {Meta {SecAlign}: A Secure Foundation {LLM} Against Prompt Injection Attacks},
+  author = {Chen, Sizhe and Zharmagambetov, Arman and Wagner, David and Guo, Chuan},
+  year   = {2025},
+  note   = {arXiv:2507.02735}
+}
+@misc{wallace2024instruction,
+  title  = {The Instruction Hierarchy: Training {LLMs} to Prioritize Privileged Instructions},
+  author = {Wallace, Eric and Xiao, Kai and Leike, Reimar and Weng, Lilian and Heidecke, Johannes and Beutel, Alex},
+  year   = {2024},
+  note   = {arXiv preprint}
+}
+@misc{shi2025promptarmor,
+  title  = {{PromptArmor}: Simple yet Effective Prompt Injection Defenses},
+  author = {Shi, Tianneng and others},
+  year   = {2025},
+  note   = {arXiv preprint}
+}
+
+% ---------------------------------------------------------------- system-level defences
+@inproceedings{debenedetti2026camel,
+  title     = {Defeating Prompt Injections by Design},
+  author    = {Debenedetti, Edoardo and others},
+  booktitle = {IEEE Conference on Secure and Trustworthy Machine Learning (SaTML)},
+  year      = {2026},
+  note      = {arXiv preprint}
+}
+@misc{wu2024fsecure,
+  title  = {System-Level Defense against Indirect Prompt Injection Attacks: An Information Flow Control Perspective},
+  author = {Wu, Fangzhou and Cecchetti, Ethan and Xiao, Chaowei},
+  year   = {2024},
+  note   = {arXiv preprint}
+}
+@misc{costa2025fides,
+  title  = {Securing {AI} Agents with Information-Flow Control},
+  author = {Costa, Manuel and others},
+  year   = {2025},
+  note   = {arXiv:2505.23643}
+}
+@misc{shi2025progent,
+  title  = {Progent: Securing {AI} Agents with Privilege Control},
+  author = {Shi, Tianneng and others},
+  year   = {2025},
+  note   = {arXiv:2504.11703}
+}
+@inproceedings{zhu2025melon,
+  title     = {{MELON}: Provable Defense Against Indirect Prompt Injection Attacks in {AI} Agents},
+  author    = {Zhu, Kaijie and others},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2025}
+}
+@inproceedings{jia2025taskshield,
+  title     = {The Task Shield: Enforcing Task Alignment to Defend Against Indirect Prompt Injection in {LLM} Agents},
+  author    = {Jia, Feiran and others},
+  booktitle = {Proceedings of the Annual Meeting of the Association for Computational Linguistics (ACL)},
+  year      = {2025}
+}
+@inproceedings{an2025ipiguard,
+  title     = {{IPIGuard}: A Novel Tool Dependency Graph-Based Defense Against Indirect Prompt Injection in {LLM} Agents},
+  author    = {An, Hengyu and others},
+  booktitle = {Proceedings of the Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  year      = {2025}
+}
+@misc{beurerkellner2025patterns,
+  title  = {Design Patterns for Securing {LLM} Agents against Prompt Injections},
+  author = {Beurer-Kellner, Luca and others},
+  year   = {2025},
+  note   = {arXiv preprint}
+}
+@misc{li2025drift,
+  title  = {{DRIFT}: Dynamic Rule-Based Defense with Injection Isolation for Securing {LLM} Agents},
+  author = {Li, Hao and others},
+  year   = {2025},
+  note   = {arXiv preprint}
+}
+@misc{kim2025pfi,
+  title  = {Prompt Flow Integrity to Prevent Privilege Escalation in {LLM} Agents},
+  author = {Kim, Juhee and others},
+  year   = {2025},
+  note   = {arXiv preprint}
+}
+@misc{zhao2026clawguard,
+  title  = {{ClawGuard}: A Runtime Security Framework for Tool-Augmented {LLM} Agents Against Indirect Prompt Injection},
+  author = {Zhao, Wei and others},
+  year   = {2026},
+  note   = {arXiv preprint}
+}
+@misc{he2026attriguard,
+  title  = {{AttriGuard}: Defeating Indirect Prompt Injection in {LLM} Agents via Causal Attribution of Tool Invocations},
+  author = {He, Yu and others},
+  year   = {2026},
+  note   = {arXiv preprint}
+}
+@misc{li2026toolfence,
+  title  = {{ToolFence}: Fine-Grained Authorization for Secure Tool-Using {LLM} Agents},
+  author = {Li, Yanjie and others},
+  year   = {2026},
+  note   = {Preprint}
+}
+@misc{narisetty2026adaptive,
+  title  = {Adaptive Evaluation of Out-of-Band Defenses Against Prompt Injection in {LLM} Agents},
+  author = {Narisetty, Praneeth and others},
+  year   = {2026},
+  note   = {arXiv preprint}
+}
+@misc{garby2026llmbda,
+  title  = {The {LLMbda} Calculus: {AI} Agents, Conversations, and Information Flow},
+  author = {Garby, Zac and others},
+  year   = {2026},
+  note   = {arXiv preprint}
+}
+@misc{gong2025csagent,
+  title  = {Secure and Efficient Access Control for Computer-Use Agents via Context Space},
+  author = {Gong, Haochen and others},
+  year   = {2025},
+  note   = {arXiv:2509.22256}
+}
+
+% ---------------------------------------------------------------- permissions, human oversight of agents
+@misc{zhu2025miniscope,
+  title  = {{MiniScope}: Authorizing Agents with Least-Privilege Permissions},
+  author = {Zhu, Jinhao and others},
+  year   = {2025},
+  note   = {arXiv:2512.11147}
+}
+@misc{michael2026permission,
+  title  = {How Agents Ask for Permission: User Permissions for {AI} Agents, from Interfaces to Enforcement},
+  author = {Michael, Alexandra E. and others},
+  year   = {2026},
+  note   = {arXiv:2607.13718}
+}
+@misc{yan2026policies,
+  title  = {Do User-Authored Permission Policies Improve Protection Against {AI} Agent Overreach?},
+  author = {Yan, Ting},
+  year   = {2026},
+  note   = {Preprint}
+}
+@inproceedings{ge2026authorization,
+  title     = {Towards Human-Centered Agent Authorization: A Landscape Analysis of Commercial {AI} Agents},
+  author    = {Ge, Wang},
+  booktitle = {Extended Abstracts of the 2026 CHI Conference on Human Factors in Computing Systems},
+  year      = {2026}
+}
+@misc{brigham2026janus,
+  title  = {Janus: a Playground for User-Involved Agentic Permission Management},
+  author = {Brigham, Natalie Grace and others},
+  year   = {2026},
+  note   = {arXiv preprint}
+}
+@inproceedings{wu2026permissions,
+  title     = {Towards Automating Data Access Permissions in {AI} Agents},
+  author    = {Wu, Yuhao and others},
+  booktitle = {IEEE Symposium on Security and Privacy (S\&P)},
+  year      = {2026}
+}
+@misc{salerno2026agent,
+  title  = {Let the Agent Do It? How Software Practitioners Understand and Make Permission Decisions in Agentic {AI} Assistants},
+  author = {Salerno, Larissa and others},
+  year   = {2026},
+  note   = {Preprint}
+}
+@misc{south2025delegation,
+  title  = {Authenticated Delegation and Authorized {AI} Agents},
+  author = {South, Tobin and others},
+  year   = {2025},
+  note   = {arXiv preprint}
+}
+@article{su2026riskcards,
+  title   = {Privacy and Data-Integrity Risk Cards for {LLM} Agents: A {UI/UX} Design Framework for Secure Human Oversight under Prompt-Injection Attacks},
+  author  = {Su, Wen-Yu and others},
+  journal = {International Journal of Graphic Design},
+  year    = {2026}
+}
+@misc{mozannar2025magentic,
+  title  = {{Magentic-UI}: Towards Human-in-the-loop Agentic Systems},
+  author = {Mozannar, Hussein and others},
+  year   = {2025},
+  note   = {arXiv:2507.22358}
+}
+@inproceedings{he2025plan,
+  title     = {Plan-Then-Execute: An Empirical Study of User Trust and Team Performance When Using {LLM} Agents As A Daily Assistant},
+  author    = {He, Gaole and Demartini, Gianluca and Gadiraju, Ujwal},
+  booktitle = {Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems},
+  year      = {2025},
+  doi       = {10.1145/3706598.3713218}
+}
+
+% ---------------------------------------------------------------- human-AI interaction, reliance
+@inproceedings{amershi2019guidelines,
+  title     = {Guidelines for Human-{AI} Interaction},
+  author    = {Amershi, Saleema and others},
+  booktitle = {Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems},
+  year      = {2019}
+}
+@article{parasuraman1997humans,
+  title   = {Humans and Automation: Use, Misuse, Disuse, Abuse},
+  author  = {Parasuraman, Raja and Riley, Victor},
+  journal = {Human Factors},
+  volume  = {39},
+  number  = {2},
+  pages   = {230--253},
+  year    = {1997}
+}
+@article{lee2004trust,
+  title   = {Trust in Automation: Designing for Appropriate Reliance},
+  author  = {Lee, John D. and See, Katrina A.},
+  journal = {Human Factors},
+  volume  = {46},
+  number  = {1},
+  pages   = {50--80},
+  year    = {2004}
+}
+@article{bucinca2021trust,
+  title   = {To Trust or to Think: Cognitive Forcing Functions Can Reduce Overreliance on {AI} in {AI}-assisted Decision-making},
+  author  = {Bu{\c{c}}inca, Zana and Malaya, Maja Barbara and Gajos, Krzysztof Z.},
+  journal = {Proceedings of the ACM on Human-Computer Interaction},
+  volume  = {5},
+  number  = {CSCW1},
+  year    = {2021}
+}
+@article{vasconcelos2023explanations,
+  title   = {Explanations Can Reduce Overreliance on {AI} Systems During Decision-Making},
+  author  = {Vasconcelos, Helena and others},
+  journal = {Proceedings of the ACM on Human-Computer Interaction},
+  volume  = {7},
+  number  = {CSCW1},
+  year    = {2023}
+}
+@inproceedings{bansal2021whole,
+  title     = {Does the Whole Exceed its Parts? The Effect of {AI} Explanations on Complementary Team Performance},
+  author    = {Bansal, Gagan and Wu, Tongshuang and Zhou, Joyce and Fok, Raymond and Nushi, Besmira and Kamar, Ece and Ribeiro, Marco Tulio and Weld, Daniel S.},
+  booktitle = {Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems},
+  year      = {2021},
+  doi       = {10.1145/3411764.3445717}
+}
+
+% ---------------------------------------------------------------- usable security, warnings, habituation
+@inproceedings{cranor2008framework,
+  title     = {A Framework for Reasoning About the Human in the Loop},
+  author    = {Cranor, Lorrie Faith},
+  booktitle = {Usability, Psychology, and Security (UPSEC '08)},
+  publisher = {USENIX},
+  year      = {2008}
+}
+@inproceedings{egelman2008warned,
+  title     = {You've Been Warned: An Empirical Study of the Effectiveness of Web Browser Phishing Warnings},
+  author    = {Egelman, Serge and Cranor, Lorrie Faith and Hong, Jason},
+  booktitle = {Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI)},
+  pages     = {1065--1074},
+  year      = {2008}
+}
+@inproceedings{sunshine2009crying,
+  title     = {Crying Wolf: An Empirical Study of {SSL} Warning Effectiveness},
+  author    = {Sunshine, Joshua and Egelman, Serge and Almuhimedi, Hazim and Atri, Neha and Cranor, Lorrie Faith},
+  booktitle = {18th USENIX Security Symposium},
+  year      = {2009}
+}
+@inproceedings{felt2012android,
+  title     = {Android Permissions: User Attention, Comprehension, and Behavior},
+  author    = {Felt, Adrienne Porter and Ha, Elizabeth and Egelman, Serge and Haney, Ariel and Chin, Erika and Wagner, David},
+  booktitle = {Proceedings of the Eighth Symposium on Usable Privacy and Security (SOUPS)},
+  year      = {2012},
+  doi       = {10.1145/2335356.2335360}
+}
+@inproceedings{akhawe2013alice,
+  title     = {Alice in Warningland: A Large-Scale Field Study of Browser Security Warning Effectiveness},
+  author    = {Akhawe, Devdatta and Felt, Adrienne Porter},
+  booktitle = {22nd USENIX Security Symposium},
+  year      = {2013}
+}
+@inproceedings{anderson2015polymorphic,
+  title     = {How Polymorphic Warnings Reduce Habituation in the Brain: Insights from an {fMRI} Study},
+  author    = {Anderson, Bonnie Brinton and others},
+  booktitle = {Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI)},
+  year      = {2015}
+}
+@article{vance2018tuning,
+  title   = {Tuning Out Security Warnings: A Longitudinal Examination of Habituation Through {fMRI}, Eye Tracking, and Field Experiments},
+  author  = {Vance, Anthony and others},
+  journal = {MIS Quarterly},
+  year    = {2018}
+}
+@article{vance2025fog,
+  title   = {The Fog of Warnings: How Non-Security-Related Notifications Diminish the Efficacy of Security Warnings},
+  author  = {Vance, Anthony and others},
+  journal = {MIS Quarterly},
+  year    = {2025}
+}
+
+% ---------------------------------------------------------------- measurement instruments & theory
+@incollection{hart1988nasatlx,
+  title     = {Development of {NASA-TLX} (Task Load Index): Results of Empirical and Theoretical Research},
+  author    = {Hart, Sandra G. and Staveland, Lowell E.},
+  booktitle = {Human Mental Workload},
+  series    = {Advances in Psychology},
+  volume    = {52},
+  pages     = {139--183},
+  publisher = {North-Holland},
+  year      = {1988},
+  doi       = {10.1016/S0166-4115(08)62386-9}
+}
+@incollection{brooke1996sus,
+  title     = {{SUS}: A Quick and Dirty Usability Scale},
+  author    = {Brooke, John},
+  booktitle = {Usability Evaluation in Industry},
+  publisher = {Taylor \& Francis},
+  year      = {1996}
+}
+@article{jian2000trust,
+  title   = {Foundations for an Empirically Determined Scale of Trust in Automated Systems},
+  author  = {Jian, Jiun-Yin and Bisantz, Ann M. and Drury, Colin G.},
+  journal = {International Journal of Cognitive Ergonomics},
+  volume  = {4},
+  number  = {1},
+  pages   = {53--71},
+  year    = {2000}
+}
+@book{macmillan2005detection,
+  title     = {Detection Theory: A User's Guide},
+  author    = {Macmillan, Neil A. and Creelman, C. Douglas},
+  edition   = {2nd},
+  publisher = {Lawrence Erlbaum Associates},
+  year      = {2005}
+}
+
+% ---------------------------------------------------------------- security foundations
+@article{saltzer1975protection,
+  title   = {The Protection of Information in Computer Systems},
+  author  = {Saltzer, Jerome H. and Schroeder, Michael D.},
+  journal = {Proceedings of the IEEE},
+  volume  = {63},
+  number  = {9},
+  pages   = {1278--1308},
+  year    = {1975}
+}
+@article{denning1976lattice,
+  title   = {A Lattice Model of Secure Information Flow},
+  author  = {Denning, Dorothy E.},
+  journal = {Communications of the ACM},
+  volume  = {19},
+  number  = {5},
+  pages   = {236--243},
+  year    = {1976},
+  doi     = {10.1145/360051.360056}
+}
+@article{hardy1988confused,
+  title   = {The Confused Deputy (or why capabilities might have been invented)},
+  author  = {Hardy, Norm},
+  journal = {ACM SIGOPS Operating Systems Review},
+  volume  = {22},
+  number  = {4},
+  year    = {1988}
+}
+@article{nissenbaum2004privacy,
+  title   = {Privacy as Contextual Integrity},
+  author  = {Nissenbaum, Helen},
+  journal = {Washington Law Review},
+  volume  = {79},
+  pages   = {119},
+  year    = {2004}
+}

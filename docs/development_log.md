@@ -32,3 +32,13 @@ baseline built from it) matches the *template* of AgentDojo's
 are therefore optimistic for template attacks; we report every result also
 under an *adaptive, detector-evading attacker* in which all text-based
 signals are forced to zero (paper, Sec. 6.4).
+
+## Post-freeze changes (explanation text only)
+After the freeze commit, only the **reason strings** shown to users were
+extended in `clear/risk.py`: a reason for weak instruction-like phrasing, and
+one for irreversible actions promoted from NOTIFY to CONFIRM. Features, risk
+scores and tiers are unchanged. We verified this by re-assessing 1,338 tool
+calls from 300 randomly sampled GPT-4o episodes with the final code: 0
+mismatches in any tier or risk value against the stored evaluation outputs.
+The UI also gained a `clear_generic` study condition. This affects no reported
+result.
