@@ -53,6 +53,8 @@ Open `http://127.0.0.1:8000` in the same environment. The local UI shows a scena
 
 The evaluation emits one row per scenario/condition in `results/scenario_results.csv` and aggregate measures in `results/summary.json`. These are **scripted fixture results**, not human performance or empirical attack prevalence. The dataset has eight hand-authored cases and is not representative of deployment traffic. No inferential statistics are appropriate for this demonstration set.
 
+The command also creates [`results/scripted_fixture_metrics.svg`](results/scripted_fixture_metrics.svg), a dependency-free plot of attack success and benign blocks over those constructed fixtures.
+
 ## Research artifacts
 
 - [`data/scenarios.jsonl`](data/scenarios.jsonl): documented constructed fixtures.
