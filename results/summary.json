@@ -1,0 +1,37 @@
+{
+  "evidence_type": "deterministic scripted scenario evaluation; not user-study data",
+  "summaries": [
+    {
+      "condition": "baseline",
+      "n": 8,
+      "attack_success_rate": 1.0,
+      "defense_effectiveness": 0.0,
+      "benign_block_rate": 0.0,
+      "decision_accuracy": 0.375
+    },
+    {
+      "condition": "risk_badge",
+      "n": 8,
+      "attack_success_rate": 0.0,
+      "defense_effectiveness": 1.0,
+      "benign_block_rate": 0.0,
+      "decision_accuracy": 0.875
+    },
+    {
+      "condition": "provenance_consent",
+      "n": 8,
+      "attack_success_rate": 0.25,
+      "defense_effectiveness": 0.75,
+      "benign_block_rate": 0.25,
+      "decision_accuracy": 0.875
+    },
+    {
+      "condition": "combined",
+      "n": 8,
+      "attack_success_rate": 0.0,
+      "defense_effectiveness": 1.0,
+      "benign_block_rate": 0.25,
+      "decision_accuracy": 1.0
+    }
+  ]
+}
