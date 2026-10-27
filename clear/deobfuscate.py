@@ -58,24 +58,63 @@ def _printable(s: str) -> bool:
     return bool(s) and sum(ch.isprintable() or ch in "\n\t" for ch in s) / len(s) > 0.9
 
 
-def decoded_variants(text: str) -> list[str]:
-    """Texts hidden inside ``text`` by common encodings (each returned once)."""
+_ESCAPES = re.compile(r"\\[ntr]")
+_B64_RUN = re.compile(r"[A-Za-z0-9+/]{16,}={0,2}")
+_HEX_RUN = re.compile(r"[0-9a-fA-F]{16,}")
+
+
+def _try_b64(blob: str, min_len: int = 8) -> str | None:
+    try:
+        dec = base64.b64decode(blob + "=" * (-len(blob) % 4), validate=False).decode("utf-8")
+    except (binascii.Error, UnicodeDecodeError, ValueError):
+        return None
+    return dec if _printable(dec) and len(dec) >= min_len else None
+
+
+def _try_hex(blob: str, min_len: int = 8) -> str | None:
+    try:
+        dec = bytes.fromhex(blob[: len(blob) // 2 * 2]).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        return None
+    return dec if _printable(dec) and len(dec) >= min_len else None
+
+
+def decoded_variants(text: str, robust: bool = False) -> list[str]:
+    """Texts hidden inside ``text`` by common encodings (each returned once).
+
+    ``robust`` (v2.1): un-escape literal ``\\n``/``\\t`` sequences of serialised tool
+    output and tolerate payloads glued to preceding characters by trying the
+    first few start offsets of every candidate run. v2 used word-boundary
+    matching only, which missed payloads glued to an escaped newline.
+    """
     out: list[str] = []
-    for m in _B64.finditer(text or ""):
-        blob = m.group(0)
-        try:
-            dec = base64.b64decode(blob + "=" * (-len(blob) % 4), validate=False).decode("utf-8")
-        except (binascii.Error, UnicodeDecodeError, ValueError):
-            continue
-        if _printable(dec):
-            out.append(dec)
-    for m in _HEX.finditer(text or ""):
-        try:
-            dec = bytes.fromhex(m.group(0)).decode("utf-8")
-        except (ValueError, UnicodeDecodeError):
-            continue
-        if _printable(dec):
-            out.append(dec)
+    t = text or ""
+    if not robust:   # exactly the frozen v2 behaviour
+        for m in _B64.finditer(t):
+            dec = _try_b64(m.group(0), 0)
+            if dec:
+                out.append(dec)
+        for m in _HEX.finditer(t):
+            dec = _try_hex(m.group(0), 0)
+            if dec:
+                out.append(dec)
+    else:
+        t = _ESCAPES.sub(" ", t)
+        for m in _B64_RUN.finditer(t):
+            run = m.group(0)
+            for off in range(0, min(8, len(run) - 15)):
+                dec = _try_b64(run[off:])
+                if dec:
+                    out.append(dec)
+                    break
+        for m in _HEX_RUN.finditer(t):
+            run = m.group(0)
+            for off in (0, 1):
+                dec = _try_hex(run[off:])
+                if dec:
+                    out.append(dec)
+                    break
+    text = text or ""
     if "%" in (text or ""):
         dec = unquote(text)
         if dec != text:
@@ -89,7 +128,7 @@ def decoded_variants(text: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
-def obfuscation_markers(text: str) -> list[str]:
+def obfuscation_markers(text: str, robust: bool = False) -> list[str]:
     """Which hiding techniques are present in ``text``."""
     t = text or ""
     marks = []
@@ -99,6 +138,7 @@ def obfuscation_markers(text: str) -> list[str]:
         marks.append("homoglyphs")
     if _BRACKET_AT.search(t) or _BRACKET_DOT.search(t):
         marks.append("bracket_obfuscation")
-    if any(_printable(v) and len(v) >= 8 for v in decoded_variants(t)[:-1]):  # exclude rot13
+    rot = codecs.decode(t, "rot13")
+    if any(v != rot and _printable(v) and len(v) >= 8 for v in decoded_variants(t, robust)):
         marks.append("encoded_payload")
     return marks

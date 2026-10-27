@@ -63,7 +63,8 @@ class Mediator:
     def _new_ledger(self) -> ProvenanceLedger:
         p = self.cfg.get("provenance", {})
         return ProvenanceLedger(p.get("min_value_len", 3), decode=bool(p.get("decode", False)),
-                                obfuscation_weight=p.get("obfuscation_weight", 0.5))
+                                obfuscation_weight=p.get("obfuscation_weight", 0.5),
+                                decode_robust=bool(p.get("decode_robust", False)))
 
     @classmethod
     def default(cls, ablate: set[str] | None = None, overrides: dict | None = None,

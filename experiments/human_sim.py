@@ -101,8 +101,27 @@ def episode_outcome(ep: dict, denied: list[tuple[int, bool]]) -> tuple[bool, boo
     return u and not benign_denied, s
 
 
+# Heterogeneous population (E3): three expertise strata. The idea of strata comes from the
+# PROV-Guard iteration; here each stratum is a *distribution* of SDT/habituation parameters,
+# and conclusions are checked across the whole mixture rather than asserted per stratum.
+STRATA = {
+    "novice":         HumanParams(d0=0.6, d_prov=0.8, d_force=0.5, criterion=-0.3, a_min=0.2, lam=7.0),
+    "intermediate":   HumanParams(d0=1.0, d_prov=1.0, d_force=0.5, criterion=0.0, a_min=0.3, lam=15.0),
+    "security_aware": HumanParams(d0=1.5, d_prov=1.2, d_force=0.5, criterion=0.3, a_min=0.45, lam=30.0),
+}
+
+
+def draw_user(rng: random.Random, mix: dict[str, float], jitter: float = 0.15) -> HumanParams:
+    name = rng.choices(list(mix), weights=list(mix.values()))[0]
+    b = STRATA[name]
+    j = lambda v: max(0.0, v * (1 + rng.gauss(0, jitter)))  # noqa: E731
+    return HumanParams(d0=j(b.d0), d_prov=j(b.d_prov), d_force=j(b.d_force),
+                       criterion=b.criterion + rng.gauss(0, jitter * 0.5),
+                       a_min=min(1.0, j(b.a_min)), lam=max(1.0, j(b.lam)))
+
+
 def simulate(pool: list[dict], policy: str, params: HumanParams, prevalence: float,
-             sessions: int, session_len: int, seed: int) -> dict:
+             sessions: int, session_len: int, seed: int, mix: dict[str, float] | None = None) -> dict:
     rng = random.Random(seed)
     attacked = [e for e in pool if e["attacked"]]
     benign = [e for e in pool if not e["attacked"]]
@@ -110,7 +129,8 @@ def simulate(pool: list[dict], policy: str, params: HumanParams, prevalence: flo
     acc = defaultdict(float)
     cnt = defaultdict(int)
     for _ in range(sessions):
-        user = SimulatedUser(params, random.Random(rng.random()))
+        p = draw_user(rng, mix) if mix else params
+        user = SimulatedUser(p, random.Random(rng.random()))
         for _ in range(session_len):
             is_att = rng.random() < prevalence
             ep = rng.choice(attacked if is_att else benign)
@@ -177,6 +197,14 @@ def main() -> None:
         run("criterion", replace(base, criterion=c))
     for prev in (0.02, 0.05, 0.1, 0.25, 0.5):
         run("prevalence", base, prevalence=prev)
+    # 2b) heterogeneous populations (E3)
+    for mix_name, mix in {"balanced": {"novice": 1, "intermediate": 1, "security_aware": 1},
+                          "mostly_novice": {"novice": 3, "intermediate": 1, "security_aware": 0.5},
+                          "mostly_expert": {"novice": 0.5, "intermediate": 1, "security_aware": 3}}.items():
+        for pol in POLICIES:
+            r = simulate(pool, pol, base, 0.1, args.sessions, args.session_len, args.seed, mix=mix)
+            rows.append({"sweep": "population", "population": mix_name, "policy": pol, "prevalence": 0.1,
+                         **asdict(base), **r})
     # 3) full factorial robustness grid
     for d0, d_prov, lam, a_min, c in itertools.product((0.5, 1.0, 1.5), (0.0, 0.5, 1.0),
                                                        (5.0, 15.0, 50.0), (0.1, 0.3, 0.6), (-0.5, 0.0, 0.5)):

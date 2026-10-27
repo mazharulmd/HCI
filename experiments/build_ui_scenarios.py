@@ -17,17 +17,88 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from clear.config import REPO_ROOT  # noqa: E402
+from clear.manifest import ToolManifest  # noqa: E402
 from clear.mediator import Mediator, ToolCall  # noqa: E402
+
+V2 = str(REPO_ROOT / "configs" / "clear_v2.yaml")
 from clear.risk import Tier  # noqa: E402
 from experiments.evaluate import necessity_labels, signature_labels  # noqa: E402
 from experiments.traces import DEFAULT_RUNS, Replayer, iter_episodes  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def _short(v, n=70) -> str:
+    s = str(v)
+    return s if len(s) <= n else s[: n - 3] + "..."
+
+
+_SALIENT = ("recipient", "recipients", "cc", "bcc", "amount", "subject", "title", "participants", "start_time",
+            "filename", "shared_with", "email", "url", "password", "user", "channel", "body", "content")
+_WHERE = {"inbox emails": "an e-mail in your mailbox", "inbox sent": "a sent e-mail",
+          "bank_account transactions": "a bank transaction", "bank_account scheduled_transactions": "a scheduled payment",
+          "calendar events": "a calendar event", "cloud_drive files": "a file"}
+
+
+def _where(path: str) -> str:
+    w = re.sub(r"\[\d+\]|\['?\d+'?\]", "", path.replace("root", "")).replace("['", " ").replace("']", "").strip()
+    for k, v in _WHERE.items():
+        if w.startswith(k):
+            return v
+    return w
+
+
+def _salient(val) -> str:
+    if isinstance(val, dict):
+        parts = [f"{k}={_short(val[k], 40)}" for k in _SALIENT if k in val and val[k] not in (None, "", [], {})]
+        return "; ".join(parts[:4]) or _short(val)
+    return _short(val)
+
+
+def consequence_previews(ep, rep, max_lines: int = 6) -> dict[int, list[str]]:
+    """Sandbox preview (pattern P7): what each side-effecting call would change.
+
+    Each call is executed on a *copy* of the AgentDojo environment in the state it
+    had at that point of the trajectory, and the resulting state difference is
+    summarised in plain language. This makes the PROV-Guard iteration's
+    counterfactual / blast-radius idea concrete: the preview is computed, not asserted.
+    """
+    import json as _json
+    from deepdiff import DeepDiff
+    from agentdojo.functions_runtime import FunctionsRuntime
+    from experiments.traces import _base_env
+    s, ut, _ = rep.tasks(ep)
+    env = _base_env(rep.version, ep.suite, _json.dumps(ep.injections, sort_keys=True)).model_copy(deep=True)
+    env = ut.init_environment(env)
+    rt = FunctionsRuntime(s.tools)
+    manifest = ToolManifest.load()
+    previews = {}
+    for c in ep.calls():
+        if manifest.get(c.function).is_side_effecting:
+            before = env.model_dump(mode="json")
+            trial = env.model_copy(deep=True)
+            rt.run_function(trial, c.function, c.args)
+            diff = DeepDiff(before, trial.model_dump(mode="json"), ignore_order=True, verbose_level=2)
+            lines = []
+            for kind, label in (("dictionary_item_added", "Adds"), ("iterable_item_added", "Adds"),
+                                ("values_changed", "Changes"), ("dictionary_item_removed", "Removes"),
+                                ("iterable_item_removed", "Removes")):
+                for path, val in (diff.get(kind) or {}).items():
+                    where = _where(path)
+                    if label == "Changes":
+                        lines.append(f"Changes {where}: {_short(val['old_value'], 40)} \u2192 {_short(val['new_value'], 40)}")
+                    else:
+                        lines.append(f"{label} {where}: {_salient(val)}")
+            previews[c.idx] = lines[:max_lines] or ["no visible change to your data"]
+        rt.run_function(env, c.function, c.args)
+    return previews
 
 
 def annotate(ep, rep, med: Mediator) -> tuple[dict, dict]:
@@ -57,6 +128,14 @@ def annotate(ep, rep, med: Mediator) -> tuple[dict, dict]:
                           "injection_score": round(s.injection_score, 3),
                           "spans": [{"start": sp.start, "end": sp.end, "label": sp.label}
                                     for sp in s.injection_spans if sp.end <= 4000]})
+    try:
+        previews = consequence_previews(ep, rep)
+    except Exception as exc:  # preview is best-effort; never block scenario building
+        previews = {}
+        print("preview failed", ep.key, repr(exc)[:120])
+    for st in steps:
+        if st["type"] == "call" and st["idx"] in previews:
+            st["preview"] = previews[st["idx"]]
     final = ep.final_output()
     steps.append({"type": "final", "text": "\n".join(str(b.get("content") or "") for b in final)})
     calls = ep.calls()
@@ -85,7 +164,7 @@ def main() -> None:
     rep = Replayer("v1")
     suites = {"banking", "travel", "workspace"}
     benign, attacked = [], []
-    med = Mediator.default()
+    med = Mediator.default(config=V2)
     for ep in iter_episodes(args.runs, args.model, {"important_instructions", "none"}):
         if ep.suite not in suites:
             continue
@@ -112,13 +191,13 @@ def main() -> None:
     rng.shuffle(chosen)
     scenarios, keys = [], {}
     for i, ep in enumerate(chosen):
-        sc, key = annotate(ep, rep, Mediator.default())
+        sc, key = annotate(ep, rep, Mediator.default(config=V2))
         sc["id"] = f"S{i + 1:02d}"
         scenarios.append(sc)
         keys[sc["id"]] = {**key, "source": ep.key}
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as fh:
-        cfg = Mediator.default().cfg
+        cfg = Mediator.default(config=V2).cfg
         json.dump({"version": 1, "config": {k: cfg[k] for k in ("risk", "tiers", "injection_signal")},
                    "scenarios": scenarios}, fh, indent=1)
     Path(args.key_out).parent.mkdir(parents=True, exist_ok=True)

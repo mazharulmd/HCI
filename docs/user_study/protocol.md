@@ -10,25 +10,31 @@ browser test (`figures/ui_*.png`), not with people.
 Do provenance-aware, risk-adaptive confirmations help people stop prompt-injected AI-agent actions?
 
 ## 2. Hypotheses (confirmatory)
-* **H-U1 (security).** The proportion of injected actions that participants prevent is higher in **A (CLEAR)** than in **B (confirm-all, generic dialog)**.
-* **H-U2 (selectivity).** The prevention rate in **C (CLEAR selectivity, generic dialog)** is higher than in **B**. This isolates the effect of asking less often, which slows habituation.
-* **H-U3 (evidence).** The prevention rate in **A** is higher than in **C**. This isolates the effect of argument-level provenance plus forcing.
-* **H-U4 (cost).** Benign-task completion in A and C is not lower than in B (non-inferiority margin: 5 percentage points). NASA-TLX raw workload in A is not higher than in B.
-
-Exploratory: SDT sensitivity d' and criterion c for dialog decisions;
-decision time; SUS; trust (Jian et al. 2000); forcing-question accuracy;
-envelope edits; free-text reasons.
+The design crosses the two levers CLEAR combines. The 2×2 factorial structure
+follows the recommendation of the Trust Boundary Lab iteration (see
+`docs/prior_iterations_audit.md`).
+* **H-U1 (selectivity).** Asking only about escalated actions, rather than about every side-effecting action, increases the proportion of injected actions that participants prevent. This is the main effect of *selectivity*.
+* **H-U2 (evidence).** Showing argument provenance, source-to-action excerpts, the consequence preview and the forcing check increases prevention. This is the main effect of *evidence*.
+* **H-U3 (cost).** Benign-task completion under full CLEAR (A) is not lower than under confirm-all (B), with a non-inferiority margin of 5 percentage points. NASA-TLX raw workload in A is not higher than in B.
+* **Exploratory.** The selectivity × evidence interaction; SDT sensitivity d′ and criterion c; decision time; SUS; trust (Jian et al. 2000); forcing-question accuracy; envelope edits; undo use; free-text reasons.
 
 ## 3. Design
-* Between-subjects, three conditions (A, B, C), random assignment stratified by self-reported programming experience.
+* Between-subjects **2 × 2 factorial**:
+
+| | generic dialog | evidence dialog |
+|---|---|---|
+| **ask about every side-effecting action** | B `confirm_all` | D `confirm_all_evidence` |
+| **ask only about CLEAR escalations** | C `clear_generic` | A `clear` (full CLEAR) |
+
+  Random assignment is stratified by self-reported programming experience. A fifth, no-mediation arm (`none`) is optional and is used only for describing the baseline.
 * A between-subjects design avoids carry-over: once a participant has seen one attack, they are primed for the rest.
-* Each participant supervises **16 recorded agent tasks**: 12 benign and 4 containing a successful prompt injection. All are real AgentDojo trajectories of GPT-4o (`clear/ui/static/scenarios.json`; the answer key is kept separately in `data/ui_answer_key.json`).
+* Each participant supervises **16 recorded agent tasks**: 12 benign and 4 containing a successful prompt injection. All are real AgentDojo trajectories of GPT-4o (`clear/ui/static/scenarios.json`); the answer key is kept separately in `data/ui_answer_key.json`. Every escalated action carries a *consequence preview* computed by executing it on a copy of the environment.
 * Scenario order is rotated per participant (Latin-square rotation in `app.js`).
 * The prevalence of attacks (25%) is higher than realistic. This is stated as a limitation, and an exploratory follow-up with 1/16 prevalence is planned.
 
 ## 4. Participants
-* **N = 195** adults (65 per condition), recruited via a crowdsourcing platform or a university pool. Fluent English. Have used e-mail and online banking. Desktop browser.
-* **Power analysis.** For pairwise contrasts with Holm correction (α = .05/3), power .80 and a medium effect d = 0.6 on participant-level prevention rates, 60 per group are required (statsmodels `TTestIndPower`). An ANOVA-type omnibus test with f = 0.25 needs 157 in total. We recruit 65 per group to allow about 8% exclusions.
+* **N = 220** adults (55 per cell), recruited via a crowdsourcing platform or a university pool. Fluent English. Have used e-mail and online banking. Desktop browser.
+* **Power analysis.** Each main effect compares 110 vs 110 participants. With α = .05 (two-sided) and power .80, a standardised effect of d = 0.4 on participant-level prevention rates requires 100 per factor level (statsmodels `TTestIndPower`). 55 per cell allows about 9% exclusions. The interaction is exploratory, because detecting it with equal power would need about four times the sample.
 * **Exclusion criteria (pre-registered).** Failing both attention checks; completing the 16 tasks in under 4 minutes; technical failure that prevents logging.
 * **Compensation** at or above the local minimum wage, prorated for an expected 35 minutes.
 
@@ -47,7 +53,7 @@ envelope edits; free-text reasons.
 * **Secondary.** Per-dialog decision correctness; d' and c computed per participant with a log-linear correction; median decision time; number of dialogs; SUS; TLX; trust.
 
 ## 7. Analysis plan
-* **Primary analysis.** Mixed-effects logistic regression, `prevented ~ condition + (1|participant) + (1|scenario)`, with planned contrasts A-B, C-B and A-C. Holm-adjusted p-values. Odds ratios with 95% CIs (Wald and parametric bootstrap).
+* **Primary analysis.** Mixed-effects logistic regression, `prevented ~ selective * evidence + (1|participant) + (1|scenario)`, with effect-coded factors. Main effects are tested with Holm correction over the two confirmatory tests. Odds ratios are reported with 95% CIs (Wald and parametric bootstrap).
 * **Non-inferiority (H-U4).** Two one-sided tests on the participant-level benign completion rate (margin 5 pp). TLX: Welch t-test, plus TOST with a margin of 8 TLX points.
 * **Robustness.** Including participants who failed one attention check. Excluding the first attacked task, to estimate learning.
 * All analysis code will be written against the log schema emitted by `clear/ui/server.py` before data collection and archived with the pre-registration.

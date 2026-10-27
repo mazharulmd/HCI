@@ -54,6 +54,8 @@ POLICY_LABEL = {
     "confirm_all:auto": "Confirm-all (deny all)",
     "clear:oracle": "CLEAR (ideal user)",
     "clear:auto": "CLEAR (deny escalations)",
+    "clear_v2:oracle": "CLEAR v2 (ideal user)",
+    "clear_v2:auto": "CLEAR v2 (deny escalations)",
 }
 MAIN_POLICIES = list(POLICY_LABEL)
 
@@ -489,7 +491,10 @@ def write_paper_tables(st: dict, main: pd.DataFrame, pub: pd.DataFrame, at: pd.D
     mac("nHeldBen", f"{int(m.loc['none:none'].n_benign):,}".replace(",", "{,}"))
     for key, name in [("none:none", "None"), ("clear:oracle", "ClearO"), ("clear:auto", "ClearA"),
                       ("confirm_all:oracle", "CallO"), ("confirm_all:auto", "CallA"), ("strict_ifc:auto", "Ifc"),
-                      ("envelope_only:auto", "Env"), ("pi_detector:auto", "Det")]:
+                      ("envelope_only:auto", "Env"), ("pi_detector:auto", "Det"),
+                      ("clear_v2:oracle", "ClearVtwoO"), ("clear_v2:auto", "ClearVtwoA")]:
+        if key not in m.index:
+            continue
         r = m.loc[key]
         mac(f"asr{name}", pct(r.ASR, 2 if r.ASR < 0.1 else 1))
         mac(f"asr{name}CI", f"[{pct(r.ASR_lo, 2)}, {pct(r.ASR_hi, 2)}]")
@@ -636,7 +641,8 @@ def main() -> None:
     # ------------------------------------------------ main comparison: important_instructions, held-out
     core = ep[(ep.defence == "none") & (ep.attack.isin(["important_instructions", "none"])) & (~ep.dev)]
     core_calls = calls[(calls.defence == "none") & (calls.attack.isin(["important_instructions", "none"])) & (~calls.dev)]
-    main = policy_metrics(core, core_calls, MAIN_POLICIES)
+    main_pols = [p for p in MAIN_POLICIES if p in set(core.policy)]
+    main = policy_metrics(core, core_calls, main_pols)
     main.to_csv(TAB / "main_results.csv", index=False)
     tex = main.assign(**{
         "ASR %": [fmt_ci(r.ASR, r.ASR_lo, r.ASR_hi) for r in main.itertuples()],
@@ -658,6 +664,9 @@ def main() -> None:
         tests.append(paired_tests(core, ref, others, "s", "attacked"))
         tests.append(paired_tests(core, ref, others, "u", "benign"))
         tests.append(paired_tests(core, ref, others, "u", "attacked"))
+    if "clear_v2:oracle" in set(core.policy):
+        tests.append(paired_tests(core, "clear_v2:oracle", ["clear:oracle", "confirm_all:oracle"], "s", "attacked"))
+        tests.append(paired_tests(core, "clear_v2_drift:oracle", ["clear_v2:oracle"], "s", "attacked"))
     tests = pd.concat(tests, ignore_index=True)
     tests.to_csv(TAB / "paired_tests.csv", index=False)
     statsout["paired_tests"] = tests.to_dict(orient="records")
@@ -679,12 +688,14 @@ def main() -> None:
 
     # ------------------------------------------------ all-suites view (incl. dev) for completeness
     allv = ep[(ep.defence == "none") & (ep.attack.isin(["important_instructions", "none"]))]
-    allm = policy_metrics(allv, calls, MAIN_POLICIES)
+    allm = policy_metrics(allv, calls, main_pols)
     allm.to_csv(TAB / "main_results_all_suites.csv", index=False)
 
     # ------------------------------------------------ call-level detection & tiers
     variants = ["clear", "clear_no_provenance", "clear_no_taint", "clear_no_exfil", "clear_no_deviation",
                 "clear_no_injection", "clear_single_tier", "clear_gt_envelope"]
+    if "tier_clear_v2" in core_calls.columns:   # combined version (v2) and its variants
+        variants += ["clear_v2", "clear_v2_drift", "clear_v2_no_injection"]
     cl = pd.DataFrame([call_level(core_calls, v) for v in variants])
     # bootstrap CI for AUROC of full CLEAR
     se = core_calls[core_calls.side_effecting == 1].reset_index(drop=True)
@@ -707,7 +718,9 @@ def main() -> None:
         names = {"clear": "CLEAR (full)", "clear_no_provenance": "-- provenance ($\\tau,\\kappa$)",
                  "clear_no_taint": "-- taint ($\\tau$)", "clear_no_exfil": "-- exfiltration ($\\kappa$)",
                  "clear_no_deviation": "-- envelope deviation ($\\delta$)", "clear_no_injection": "-- instruction signal ($\\iota$)",
-                 "clear_single_tier": "single threshold (no tiers)", "clear_gt_envelope": "oracle intent envelope"}
+                 "clear_single_tier": "single threshold (no tiers)", "clear_gt_envelope": "oracle intent envelope",
+                 "clear_v2": "CLEAR v2 (+ decoding-aware lineage)", "clear_v2_drift": "v2 + goal drift $\\gamma$ (rejected)",
+                 "clear_v2_no_injection": "v2 -- instruction signal ($\\iota$)"}
         rows.append({"Variant": names[v],
                      "ASR ideal %": f"{100 * o.ASR:.1f}", "ASR auto %": f"{100 * a.ASR:.1f}",
                      "BU auto %": f"{100 * a.BU:.1f}", "Dialogs/benign": f"{o.int_benign:.2f}",

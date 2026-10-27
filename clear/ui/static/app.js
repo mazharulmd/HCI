@@ -3,10 +3,13 @@
 "use strict";
 
 const params = new URLSearchParams(location.search);
-const COND = ["clear", "clear_generic", "confirm_all", "none"].includes(params.get("condition")) ? params.get("condition") : "clear";
+const COND = ["clear", "clear_generic", "confirm_all", "confirm_all_evidence", "none"].includes(params.get("condition")) ? params.get("condition") : "clear";
+// 2x2 factorial (selectivity x evidence): clear = selective+evidence, clear_generic = selective only,
+// confirm_all_evidence = evidence only, confirm_all = neither; none = no mediation.
 // clear_generic: CLEAR decides WHEN to ask, but the dialog shows no provenance / forcing (isolates selectivity)
 const SELECTIVE = COND === "clear" || COND === "clear_generic";
-const EVIDENCE = COND === "clear";
+const EVIDENCE = COND === "clear" || COND === "confirm_all_evidence";
+const ASK_ALL = COND === "confirm_all" || COND === "confirm_all_evidence";
 const PID = /^[A-Za-z0-9_-]{1,32}$/.test(params.get("pid") || "") ? params.get("pid") : "demo";
 const STEP_DELAY = Number(params.get("delay") || 450);
 
@@ -40,7 +43,7 @@ function hashPid(s) { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0
 
 async function init() {
   document.documentElement.dataset.theme = params.get("theme") || "";
-  $("condition-badge").textContent = { clear: "Condition A", confirm_all: "Condition B", clear_generic: "Condition C", none: "Condition D" }[COND];
+  $("condition-badge").textContent = { clear: "Condition A", confirm_all: "Condition B", clear_generic: "Condition C", confirm_all_evidence: "Condition D", none: "Condition E" }[COND];
   DATA = await (await fetch("scenarios.json")).json();
   CFG = DATA.config;
   const n = DATA.scenarios.length;
@@ -119,9 +122,9 @@ async function run() {
   for (const step of scenario.steps) {
     await sleep(STEP_DELAY);
     if (step.type === "call") {
-      const sc = SELECTIVE ? rescore(step) : { tier: step.side_effecting ? "CONFIRM" : "ALLOW", risk: 0, reasons: [] };
+      const sc = (SELECTIVE || EVIDENCE) ? rescore(step) : { tier: step.side_effecting ? "CONFIRM" : "ALLOW", risk: 0, reasons: [] };
       const ask = (SELECTIVE && (sc.tier === "CONFIRM" || sc.tier === "FORCE")) ||
-                  (COND === "confirm_all" && step.side_effecting);
+                  (ASK_ALL && step.side_effecting);
       let ok = true;
       if (ask) {
         const res = await askUser(step, sc);
@@ -181,12 +184,37 @@ function argsTable(step, withProv) {
         div.append(tag);
         if (p.sources.length) div.append(el("span", "snippet", " " + p.sources[0]));
         td.append(div);
+        if (p.origin === "external" && p.snippet) td.append(excerpt(p.snippet, String(p.value)));
       }
     }
     tr.append(td);
     t.append(tr);
   }
   return t;
+}
+
+// Source-to-action excerpt: the passage of the source in which the value appears, value highlighted.
+function excerpt(snippet, value) {
+  const box = el("div", "excerpt");
+  const lo = snippet.toLowerCase(), v = value.toLowerCase();
+  const i = v ? lo.indexOf(v) : -1;
+  box.append(document.createTextNode("\u201c"));
+  if (i < 0) box.append(document.createTextNode(snippet));
+  else box.append(document.createTextNode(snippet.slice(0, i)), el("mark", "inj", snippet.slice(i, i + v.length)),
+                  document.createTextNode(snippet.slice(i + v.length)));
+  box.append(document.createTextNode("\u201d"));
+  return box;
+}
+
+// Consequence preview: state change computed by executing the call on a copy of the environment.
+function previewBox(step) {
+  const box = el("div", "preview");
+  box.append(el("h3", "", "What will change"));
+  const ul = el("ul", "reasons");
+  for (const line of step.preview || []) ul.append(el("li", "", line));
+  if (!(step.preview || []).length) ul.append(el("li", "", "(no preview available)"));
+  box.append(ul, el("p", "note", step.reversible ? "You can undo this later." : "This cannot be undone."));
+  return box;
 }
 
 function forcingTarget(step) {
@@ -196,7 +224,8 @@ function forcingTarget(step) {
   return null;
 }
 
-function askUser(step, sc) {
+function askUser(step, sc0) {
+  let sc = sc0;
   return new Promise((resolve) => {
     const dlg = $("dlg"), body = $("dlg-body"), approve = $("btn-approve");
     body.replaceChildren();
@@ -209,6 +238,8 @@ function askUser(step, sc) {
       body.append(head, el("p", "summary", `The agent wants to run ${step.function}.`), argsTable(step, false));
       approve.disabled = false;
     } else {
+      const dtier = sc.tier === "FORCE" ? "FORCE" : "CONFIRM";   // evidence dialogs: confirm or force style
+      sc = { ...sc, tier: dtier };
       body.className = "dlg " + sc.tier;
       const head = el("div", "dlg-head");
       head.append(el("span", "tier " + sc.tier, sc.tier === "FORCE" ? "high risk" : "review"),
@@ -218,7 +249,7 @@ function askUser(step, sc) {
       bar.style.width = `${Math.round(100 * Math.min(1, sc.risk))}%`;
       bar.style.background = `var(--${sc.tier.toLowerCase()})`;
       meter.append(bar);
-      body.append(head, el("p", "summary", humanize(step)), meter, argsTable(step, true));
+      body.append(head, el("p", "summary", humanize(step)), meter, argsTable(step, true), previewBox(step));
       if (sc.reasons.length) {
         body.append(el("h3", "", "Why you are asked"));
         const ul = el("ul", "reasons");

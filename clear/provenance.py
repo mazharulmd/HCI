@@ -96,7 +96,9 @@ class Source:
     injection_score: float = 0.0
     injection_spans: list[Span] = field(default_factory=list)
     decode: bool = False
+    decode_robust: bool = False
     obfuscation: list[str] = field(default_factory=list)
+    decoded_texts: list[str] = field(default_factory=list)
     _norm: str = ""
     _compact: str = ""
     _alt_norms: list[str] = field(default_factory=list)
@@ -107,10 +109,11 @@ class Source:
         self._compact = compact(self.text)
         if self.decode and self.trust == "untrusted":
             # decoding-aware lineage: canonical form + decoded payload variants
-            variants = [canonical(self.text)] + [canonical(v) for v in decoded_variants(self.text)]
+            self.decoded_texts = decoded_variants(self.text, self.decode_robust)
+            variants = [canonical(self.text)] + [canonical(v) for v in self.decoded_texts]
             self._alt_norms = [norm(v) for v in variants]
             self._alt_compacts = [compact(v) for v in variants]
-            self.obfuscation = obfuscation_markers(self.text)
+            self.obfuscation = obfuscation_markers(self.text, self.decode_robust)
 
     @property
     def label(self) -> str:
@@ -160,21 +163,28 @@ class Attribution:
 class ProvenanceLedger:
     """Append-only record of everything the agent has seen in one task."""
 
-    def __init__(self, min_value_len: int = 3, decode: bool = False, obfuscation_weight: float = 0.5) -> None:
+    def __init__(self, min_value_len: int = 3, decode: bool = False, obfuscation_weight: float = 0.5,
+                 decode_robust: bool = False) -> None:
         self.sources: list[Source] = []
         self.min_value_len = min_value_len
         self.decode = decode
+        self.decode_robust = decode_robust
         self.obfuscation_weight = obfuscation_weight
 
     # ------------------------------------------------------------ recording
     def _add(self, **kw) -> Source:
-        src = Source(sid=len(self.sources), decode=self.decode, **kw)
+        src = Source(sid=len(self.sources), decode=self.decode, decode_robust=self.decode_robust, **kw)
         if src.trust == "untrusted":
             src.injection_score, src.injection_spans = injection_likeness(src.text)
             if self.decode:
                 # score the canonical text (homoglyph / invisible-character evasion);
                 # keep spans on the original text so the interface can highlight them
                 src.injection_score = max(src.injection_score, injection_likeness(canonical(src.text))[0])
+                if self.decode_robust:
+                    # v2.1: instructions hidden inside decoded payloads also count (rot13 excluded:
+                    # it is applied to every text and would only add noise)
+                    for dec in src.decoded_texts[:-1]:
+                        src.injection_score = max(src.injection_score, injection_likeness(canonical(dec))[0])
             if self.decode and src.obfuscation:
                 # hiding text from the human reader is itself an injection cue
                 src.injection_score = 1 - (1 - src.injection_score) * (1 - self.obfuscation_weight)

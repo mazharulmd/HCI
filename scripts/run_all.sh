@@ -20,4 +20,9 @@ wait
 python experiments/human_sim.py --sessions 1000
 python experiments/analyze.py
 python experiments/build_ui_scenarios.py
+# combined-version experiments
+python experiments/laundering.py
+python experiments/cross_benchmark.py
+python experiments/offline_variants.py
+python experiments/analyze_v2.py
 scripts/build_paper.sh

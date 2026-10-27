@@ -30,6 +30,7 @@
 \newtheorem{remark}{Remark}
 
 \input{generated/numbers.tex}
+\input{generated/numbers_v2.tex}
 \newcommand{\clear}{\textsc{Clear}}
 \newcommand{\tier}[1]{\textsf{#1}}
 
@@ -40,7 +41,7 @@ Provenance-Aware, Risk-Adaptive Design Patterns Against Prompt Injection}
 \small [Affiliation]\\
 \small \texttt{[corresponding e-mail]}}
 
-\date{Manuscript prepared 26 October 2026}
+\date{Manuscript prepared 27 October 2026}
 
 \begin{document}
 \maketitle
@@ -51,34 +52,43 @@ Tool-using AI agents can be hijacked by \emph{indirect prompt injection}:
 instructions hidden in e-mails, documents or web pages that the agent reads.
 System-level defences that block every untrusted data flow lose utility on the
 many legitimate tasks that \emph{must} use such data. Deployed agents therefore
-fall back on the human, usually through generic ``approve this action?'' dialogs.
-Two decades of usable-security research show that such dialogs fail when they
-are frequent and uninformative. We present \clear{} (Contextual,
-Lineage-aware, Escalating Agent-action Review), a human-centred mediation
-framework that decides \emph{when} to involve the user and \emph{what} to show
-them. \clear{} tracks the provenance of every argument of every proposed tool
-call. It scores contextual risk from interpretable features (harm potential,
-argument taint, private-data egress, deviation from a user-editable intent
-envelope, instruction-likeness of untrusted content) and escalates through four
-tiers. The highest tier uses a differently shaped, cognitive-forcing dialog. We
-prove an escalation floor that no attacker-controlled text can lower. We
-evaluate \clear{} by replaying \nEpisodes{} real agent trajectories from
-\nModels{} LLMs and five published defences in the AgentDojo benchmark. After
-mediation we recompute the benchmark's own utility and security predicates
-(replay agreement \fidU\%/\fidS\%). On held-out episodes \clear{} reduces attack
-success from \asrNone\% to \asrClearO\% with a perfectly discerning user, and
-to \asrClearA\% when every escalation is denied. It does so while asking
-\dlgReduction\% fewer confirmation questions than confirm-every-action
-(\dlgClearO{} vs.\ \dlgCallO{} per benign task; $p=\wilcoxP$). Against an
-attacker who evades text-based detection, \clear{} keeps attack success at
-\asrEvadeClear\%; a provenance-free mediator never goes below
-\asrEvadeNoProvMin\% at any threshold, and a lexical detector offers no
-protection at all. A parametric, habituation-aware model of human responses
-(not human data) predicts lower end-to-end compromise than confirm-all in
-\simShare\% of \simGridN{} parameter settings. We release the framework, an
-interactive agent console that doubles as a study apparatus, all analysis
-code, and a pre-registered user-study protocol. The protocol has not yet been
-run with participants.
+fall back on the human, usually through generic ``approve this action?'' dialogs,
+which usable-security research shows fail when they are frequent and
+uninformative.
+
+We present \clear{} (Contextual, Lineage-aware, Escalating Agent-action
+Review), a human-centred mediation framework that decides \emph{when} to
+involve the user and \emph{what} to show them. It consolidates three design
+iterations into eight testable design patterns (P0--P7). \clear{} attributes every argument of
+every proposed tool call to its source; attribution is decoding-aware, so it
+resists provenance laundering. Contextual risk is scored from interpretable
+features and drives four escalation tiers. Dialogs pair source-to-action
+excerpts with a consequence preview computed in a sandbox, and the
+highest-risk tier adds a cognitive-forcing check. We prove an escalation floor
+that no attacker-controlled text can lower.
+
+We replay \nEpisodes{} real trajectories of \nModels{} LLM agents and five
+published defences in AgentDojo, recomputing the benchmark's own predicates
+(replay agreement \fidU\%/\fidS\%). On held-out episodes \clear{} reduces
+attack success from \asrNone\% to \asrClearO\% with a perfectly discerning
+user, and to \asrClearA\% when every escalation is denied. It asks
+\dlgReduction\% fewer questions than confirm-every-action (\dlgClearO{} vs.\
+\dlgCallO{} per benign task; $p=\wilcoxP$). We also simulate an attacker who encodes the target value, measuring residual
+success among attacks that beat the undefended agent. Lexical lineage then lets
+\laundVoneMin--\laundVoneMax\% succeed instead of \laundPlainVal\%, and
+decoding-aware lineage restores \laundVtwoVal\%. Against detector-evading phrasing, \clear{} holds at
+\asrEvadeClear\%, while a provenance-free mediator stays at or above
+\asrEvadeNoProvMin\%. On 258 synthetic stress scenarios spanning code, cloud
+and finance, \clear{} matches the recall of two alternative HCI engines with far
+fewer false escalations of benign high-privilege actions (\cbClearFer\% vs.\
+\cbTbFer\% and \cbPgFer\%). A goal-drift signal borrowed from an earlier
+iteration was rejected on development data.
+
+A parametric, habituation-aware user model (\emph{not human data}) predicts
+lower end-to-end compromise than confirm-all in \simShare\% of \simGridN{}
+settings and across heterogeneous user populations. We release all code, data,
+an instrumented console and a pre-registered $2{\times}2$ factorial user-study
+protocol, which has not yet been run.
 \end{abstract}
 
 \noindent\textbf{Keywords:} prompt injection; LLM agents; human-in-the-loop; usable security; provenance; security warnings; habituation; human--AI interaction
@@ -141,11 +151,22 @@ and the instruction-likeness of untrusted content. The result is an
 interpretable risk score that drives four escalation tiers: allow, notice,
 confirm, and force.
 
-\emph{What to show.} Confirmation dialogs show where each value came from and
-why the action is suspect. The highest-risk tier uses a deliberately different
-interaction: a cognitive-forcing check~\citep{bucinca2021trust} asking where a
-value came from. This keeps habituation to routine dialogs from transferring to
-rare, dangerous ones.
+\emph{What to show.} Confirmation dialogs show where each value came from,
+quoting the source passage (a \emph{source-to-action} excerpt). They also show
+what the action would change, computed by executing it on a copy of the
+environment, and why it is suspect. The highest-risk tier uses a deliberately
+different interaction: a cognitive-forcing check~\citep{bucinca2021trust} asking
+where a value came from. This keeps habituation to routine dialogs from
+transferring to rare, dangerous ones.
+
+\emph{Three iterations, one framework.} \clear{} consolidates three design
+iterations of this project. An early prototype contributed the source-to-action
+framing and a factorial study design. A second iteration proposed
+decoded-payload provenance, goal-drift scoring and counterfactual previews, but
+validated them only with a simulator whose effect sizes were hard-coded. We
+re-implemented every borrowed idea and evaluated it on real trajectories. We
+adopted decoding-aware lineage and a \emph{computed} consequence preview,
+rejected goal drift, and audited the earlier evidence (\cref{sec:lessons}).
 
 \paragraph{Contributions.}
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
@@ -153,21 +174,29 @@ rare, dangerous ones.
   the \emph{role of the human} and the \emph{evidence} the human receives. It
   identifies the gap at the intersection of system-level mediation and the
   human factors of escalation (\cref{sec:related}).
-\item The \clear{} framework: six testable design patterns, a formal risk and
-  escalation model, and an \emph{escalation floor} (\cref{prop:floor}) that
-  attacker-controlled text cannot lower (\cref{sec:framework}).
+\item The \clear{} framework: eight testable design patterns (P0--P7), a formal risk and
+  escalation model, an \emph{escalation floor} that attacker-controlled text
+  cannot lower (\cref{prop:floor}), and its extension to laundered values
+  (\cref{prop:launder}) (\cref{sec:framework}).
 \item An open implementation. It comprises the mediator, an AgentDojo-compatible
-  replayer, baselines, an interactive agent console that doubles as a user-study
-  apparatus, and 49 automated tests.
+  replayer, baselines (including two alternative HCI defence engines), an
+  instrumented console that doubles as a study apparatus, and 57 automated
+  tests.
 \item The, to our knowledge, largest environment-grounded evaluation of a
   human-in-the-loop prompt-injection defence. It covers \nEpisodes{} real
   trajectories from \nModels{} LLMs and five published defences, and reports
   security, utility \emph{and user burden}, with significance tests, ablations,
-  a detector-evading attacker and latency (\cref{sec:method,sec:results}).
-\item A habituation-aware, signal-detection model that turns escalation
-  decisions into end-to-end risk under fallible users. We use it to derive
-  hypotheses for a pre-registered user study, whose protocol and apparatus we
-  release (\cref{sec:human,sec:study}).
+  a detector-evading attacker, a provenance-laundering attacker, a
+  cross-benchmark stress test and latency (\cref{sec:method,sec:results}).
+\item A habituation-aware signal-detection model, robust to heterogeneous user
+  populations, that turns escalation decisions into end-to-end risk. We use it
+  to derive the hypotheses of a pre-registered $2{\times}2$ factorial user study
+  (selectivity $\times$ evidence), whose protocol and apparatus we release
+  (\cref{sec:human,sec:study}).
+\item A reproducible audit of simulated ``user-study'' evidence produced in an
+  earlier iteration. It shows how hard-coded effect sizes can masquerade as
+  findings, and derives reporting rules for simulated HCI-security evidence
+  (\cref{sec:lessons}).
 \end{enumerate}
 
 \paragraph{Scope and honesty statement.}
@@ -355,7 +384,7 @@ scope.
 \node[box=gray!10, minimum width=2.4cm] (tools) at (12.0,-2.4) {Tools\\\footnotesize P0 manifest};
 \node[box=green!8, minimum width=2.3cm] (allow) at (1.6,-4.6) {\tier{ALLOW}\\\footnotesize execute, log};
 \node[box=blue!8, minimum width=2.3cm] (notify) at (4.3,-4.6) {\tier{NOTIFY}\\\footnotesize ambient + undo};
-\node[box=yellow!15, minimum width=2.3cm] (confirm) at (7.0,-4.6) {\tier{CONFIRM}\\\footnotesize provenance dialog};
+\node[box=yellow!15, minimum width=2.3cm] (confirm) at (7.0,-4.6) {\tier{CONFIRM}\\\footnotesize evidence + P7 preview};
 \node[box=red!10, minimum width=2.3cm] (force) at (9.7,-4.6) {\tier{FORCE}\\\footnotesize P5 forcing check};
 \node[box=gray!5, minimum width=8.6cm, minimum height=7mm] (audit) at (5.6,-6.0) {P6 audit timeline with undo $\cdot$ P4 interruption budget};
 \draw[arr] (user) -- (env);
@@ -372,7 +401,7 @@ scope.
 \end{figure}
 
 \subsection{Design patterns}
-\clear{} is organised as six testable design patterns (\cref{fig:arch}).
+\clear{} is organised as eight testable design patterns (\cref{fig:arch}).
 
 \begin{description}[leftmargin=0pt,itemsep=3pt,font=\normalfont\bfseries]
 \item[P0 Declared capabilities.] Each tool is annotated once by its developer,
@@ -391,7 +420,12 @@ scope.
 \item[P2 Argument-level lineage.] Every argument value is attributed to the
   user's request, a trusted record, specific external sources, or nothing. Trust
   requires positive evidence: values that appear nowhere are treated as weakly
-  tainted (\emph{fail-closed endorsement}).
+  tainted (\emph{fail-closed endorsement}). Attribution is \emph{decoding-aware}
+  (v2). Untrusted text is canonicalised (NFKC, invisible characters removed,
+  homoglyphs folded, ``[at]/[dot]'' resolved), and payloads hidden by base64,
+  hex, percent- or HTML-encoding or ROT13 are decoded and indexed. A value
+  laundered through such an encoding is therefore still traced to its source,
+  and hiding text from the human reader is itself counted as an injection cue.
 \item[P3 Contextual risk.] Interpretable features are combined into an
   expected-harm proxy (\cref{sec:formal}). Each nonzero feature yields a
   plain-language reason that is shown to the user.
@@ -409,6 +443,14 @@ scope.
   \clear{} reserves it for the highest tier.
 \item[P6 Audit and undo.] An ambient timeline lists every executed action and
   its tier, and reversible actions can be undone.
+\item[P7 Computed consequence preview.] Every escalated action is executed on a
+  \emph{copy} of the environment in its current state. The resulting state
+  difference is shown in plain language (``Adds a bank transaction:
+  recipient=US13\ldots, amount=0.01''; ``Removes a file:
+  sales-report-Q1-2024.xlsx''), together with whether the action can be undone.
+  This makes counterfactual previews concrete: they are computed, not asserted,
+  and they expose side effects the user may not anticipate. For example,
+  creating a calendar event in AgentDojo also e-mails every participant.
 \end{description}
 
 \subsection{Formal model}
@@ -489,23 +531,55 @@ from trusted records (``delete the largest file'') rely on $\delta$ and
 $\iota$, and output-only manipulations are out of reach of any tool-boundary
 mediator. We quantify both in \cref{sec:results}.
 
+\paragraph{Provenance laundering.} An adaptive attacker can try to break the
+premise of \cref{prop:floor}: plant the target value in disguised form and rely
+on the LLM to decode it, so that the value appears in \emph{no} source. Let
+$\mathcal{D}$ be the set of transformations the decoder inverts (canonicalisation
+and the decodings listed in P2). Decoding-aware attribution evaluates $A(v)$
+against every source $c$ \emph{and} its decoded variants
+$\{d(c)\}_{d\in\mathcal{D}}$.
+
+\begin{proposition}[Laundering closure]
+\label{prop:launder}
+If an attacker-chosen value $v$ reaches the agent only through untrusted content
+in which it appears as $t(v)$ for some $t$ with $t^{-1}\in\mathcal{D}$, then
+decoding-aware attribution yields $o(v)=\mathsf{E}$. \Cref{prop:floor} therefore
+applies to $v$ unchanged. Under lexical attribution, $o(v)=\bot$ and the floor
+weakens to $R\ge s\,w_\tau\,\rho_T(\bot)=0.45\,s$.
+\end{proposition}
+\begin{proof}
+$t^{-1}(t(v))=v$ is among the indexed variants of the carrying source $c$, so
+$c\in A(v)$ and $\ell(c)=\mathsf{E}$. By the attacker model, $v$ is absent from
+user and trusted sources, so the origin is $\mathsf{E}$. The weakened bound
+follows from \cref{eq:risk} with $\tau=\rho_T(\bot)=0.5$.
+\end{proof}
+
+The weakened bound still escalates payments and credentials ($s=1$:
+$R\ge0.45\ge\theta_C$). Messaging and sharing tools ($s=0.8$: $R\ge0.36$) and
+lower-sensitivity tools, however, fall below the forcing tier or reach only a
+notice. Experiment E1 (\cref{sec:launder}) measures this gap on real
+trajectories. Encodings outside $\mathcal{D}$, such as a value the attacker
+asks the model to compute, remain a limitation.
+
 \subsection{Interface}
 \Cref{fig:ui} shows the console. Before the agent starts, the intent envelope
 appears as toggleable capability chips with the entities the request names.
 Agent activity is a timeline in which untrusted outputs are tagged
 \emph{external content}, and text addressed to the agent is highlighted with a
-banner. A \tier{CONFIRM} dialog summarises the action in plain language and
-shows a risk meter, each argument with its provenance chip (\emph{from your
-request}, \emph{from a trusted record}, \emph{from external content} with the
-source, or \emph{not found in any source}), and the reasons. A \tier{FORCE}
-dialog adds the forcing question. All trace content is rendered as text only,
+banner. A \tier{CONFIRM} dialog summarises the action in plain language and shows a
+risk meter and each argument with its provenance chip (\emph{from your request},
+\emph{from a trusted record}, \emph{from external content} with the source, or
+\emph{not found in any source}). For external values, the dialog also shows the
+source passage with the value highlighted. It then shows the computed
+consequence preview (P7) and the reasons. A \tier{FORCE} dialog adds the
+forcing question. All trace content is rendered as text only,
 never as HTML. Envelope edits re-score calls client-side with the same model.
 
 \begin{figure}[t]
 \centering
 \begin{subfigure}[t]{0.52\linewidth}\centering
 \includegraphics[width=\linewidth]{figures/ui_force_dialog.png}
-\caption{\clear{} \tier{FORCE} dialog (attacked banking task).}
+\caption{\clear{} \tier{FORCE} dialog (attacked banking task): provenance chips, source-to-action excerpt showing the injected sentence, computed consequence preview, reasons and forcing check.}
 \end{subfigure}\hfill
 \begin{subfigure}[t]{0.45\linewidth}\centering
 \includegraphics[width=\linewidth]{figures/ui_confirm_dialog.png}\\[3pt]
@@ -521,10 +595,11 @@ never as HTML. Envelope edits re-score calls client-side with the same model.
 \texttt{start\_task}, \texttt{observe\_result}, \texttt{assess} and
 \texttt{decide}, so it can wrap any agent loop. The AgentDojo adapter streams
 recorded or live messages through it. The console is a standard-library HTTP
-server with a vanilla-JavaScript client and supports four study conditions
-(\cref{sec:study}). Configuration, the tool manifest and every design decision
-made on development data are versioned. The test suite (49 tests) includes a
-randomised property test of \cref{prop:floor}, end-to-end mediation, UI logging
+server with a vanilla-JavaScript client and supports the four conditions of a
+$2{\times}2$ factorial study plus a no-mediation arm (\cref{sec:study}). Configuration, the tool manifest and every design decision
+made on development data are versioned. The test suite (57 tests) includes a
+randomised property test of \cref{prop:floor}, laundering tests for
+\cref{prop:launder}, a label-blindness test for the baseline engines, end-to-end mediation, UI logging
 and input validation, a check that participant payloads do not leak
 ground-truth labels, and integration tests against real traces.
 
@@ -620,6 +695,59 @@ threshold was changed. The configuration was committed before any held-out
 result was computed. All main results use \emph{held-out} episodes: travel and
 workspace for GPT-4o, and all suites for the other 21 models (\nHeldAtt{}
 attacked, \nHeldBen{} benign).
+
+\subsection{Combined version and additional experiments}
+\label{sec:v2method}
+\paragraph{Second freeze point.} Candidate features from the earlier iterations
+were evaluated on the same development split with a decision rule fixed in
+advance: adopt a feature if it does not raise ideal-user ASR and does not raise
+dialogs per benign task by more than 10\%.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Decoding-aware lineage} left every development metric unchanged and
+  was adopted (\clear{} v2, committed before any held-out re-evaluation).
+\item A lexical \emph{goal-drift} feature $\gamma$ (cosine mismatch between the
+  request and the action; weight 0.3) raised dialogs per benign task by 22\%
+  without lowering ASR, and was rejected.
+\end{itemize}
+The full replay was re-run with v2 and its variants. All v1 results reproduced
+exactly.
+
+\paragraph{E1: provenance laundering.} We take every held-out episode in which
+the recorded attack succeeded (\laundN{} episodes). Inside the tool outputs we
+re-encode the attacker-specific argument values in five ways (base64, hex,
+Cyrillic homoglyphs, zero-width splitting, ``[at]/[dot]'') or base64-encode the
+whole injection block. The agent's recorded calls are unchanged: they carry the
+decoded value, which is the attacker's goal. This is a worst case for the
+defender, since encoding usually lowers an injection's success. Executed calls
+and environments are unchanged, so ideal-user outcomes are exact; we look them
+up among the stored outcomes for every subset of denied injected calls. One
+robustness bug of the v2 decoder surfaced in this held-out experiment. Payloads
+glued to serialised ``\textbackslash n'' escapes were not detected, and decoded
+payload text was not scored for instruction-likeness. We fixed both in a
+\emph{post-hoc} v2.1, which we report separately from the frozen v2.
+
+\paragraph{E2: cross-benchmark stress test.} To probe domains and attack
+families absent from AgentDojo, we use the call-level scenarios of the two
+earlier iterations. \emph{PROV-Guard-250} comprises 250 template-generated
+single-call scenarios in five domains (e-mail, cloud drive, banking, code/IDE,
+calendar) and five attack families (direct override, context framing,
+obfuscated payload, cross-tool chain, goal mimicry). \emph{Trust-Boundary-8}
+comprises 8 hand-authored fixtures without tool arguments. Tools are annotated
+in a separate stress manifest. We compare \clear{} v1/v2 with the two earlier
+engines, run unmodified and \emph{blinded} to ground-truth fields (a test checks
+label-blindness), and with confirm-all and the lexical detector. Two properties
+of PROV-Guard-250 limit what it can show. First, a single provenance rule (a
+critical value appears in external content and not in the request) separates
+all 150 attacks from all 100 benign cases. Second, every attack uses an
+external or high-privilege tool. We therefore report recall per family and the
+false escalation rate on the 25 benign high-privilege calls, and never treat
+the benchmark as agent-level ASR.
+
+\paragraph{E3: heterogeneous users.} The simulated-user analysis
+(\cref{sec:human}) is repeated with users drawn from a mixture of three
+expertise strata (novice, intermediate, security-aware). Each stratum is a
+distribution over sensitivity, criterion and habituation parameters with 15\%
+individual jitter, and three mixtures are compared.
 
 % =========================================================================
 \section{Results}
@@ -762,6 +890,82 @@ template attack (\aurocNoProv), for the same reason that it fails under evasion.
 \latPnn\,ms; max \latMax\,ms) in single-threaded Python. This is negligible
 next to an LLM call.
 
+\paragraph{Combined version.} \clear{} v2 behaves identically to v1 on
+ordinary traffic: ideal-user ASR is \asrClearVtwoO\% and dialogs per benign task
+\dlgClearVtwoO{} (\cref{tab:main,tab:ablation}). Decoding only changes the
+outcome when a value is disguised (E1). The rejected goal-drift feature, which
+was retained for reporting only, adds dialogs without catching additional
+attacks on held-out data as well (\cref{tab:ablation}).
+
+\subsection{E1: Provenance laundering}
+\label{sec:launder}
+\Cref{tab:launder} and \cref{fig:launder} report residual attack success among
+the \laundN{} held-out attacks that succeeded against the undefended agent. With
+plain injections, \clear{} with an ideal user lets \laundPlainVal\% of them
+through. Once the attacker disguises the target value, lexical lineage (v1)
+lets \laundVoneMin--\laundVoneMax\% through: the value becomes
+``unattributed'', and its taint drops from 1 to 0.5. As predicted by
+\cref{prop:launder}, harm alone still escalates payments, messages and
+shares. For base64-encoded values, every injected call that slipped through
+under v1 is a web request to an attacker URL (114 calls) or a calendar
+invitation (42 calls). Decoding-aware lineage (v2) restores
+\laundVtwoVal\% for all five value encodings. When the \emph{whole} injection
+block is base64-encoded, v1 rises to \laundBlockVone\%. The frozen v2 reaches
+\laundBlockVtwo\% and the post-hoc v2.1 \laundBlockVtwoone\%, against
+\laundBlockPlain\% for the plain block on the same episodes. v2 missed
+payloads that tool serialisation had glued to escaped line breaks, and it did
+not score decoded text for instruction-likeness. v2.1 fixes both and closes the
+gap: no episode succeeds laundered that fails plain. Because this fix was made
+after seeing E1, its E1 result is not a confirmatory test.
+
+On ordinary held-out traffic, v2.1 changes neither ideal-user ASR
+(\offVtwooneAsr\% vs.\ \offVtwoAsr\% for v2) nor burden (\offVtwooneDlg{} vs.\
+\offVtwoDlg{} dialogs per benign task), so the fix costs nothing on
+non-adversarial input.
+
+\begin{table}[t]
+\centering\small
+\caption{E1 provenance laundering: residual attack success (\%, ideal user; Wilson 95\% CIs) among held-out attacks that succeeded undefended. ``Plain'' is the same episodes without laundering. v2.1 is a post-hoc fix (see text).}
+\label{tab:launder}
+\resizebox{\linewidth}{!}{\input{generated/laundering.tex}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig_laundering.pdf}
+\caption{E1: residual attack success under provenance laundering. Lexical lineage (v1) is evaded by every encoding; decoding-aware lineage (v2) restores the unlaundered level for all value encodings.}
+\label{fig:launder}
+\end{figure}
+
+\subsection{E2: Cross-benchmark stress test}
+\label{sec:cross}
+\Cref{tab:cross} compares six engines on the stress scenarios. On
+PROV-Guard-250, every provenance-aware engine escalates all 150 attacks in
+every family, including goal mimicry and obfuscated payloads. This is expected
+from the benchmark's separability, and we therefore do not read it as evidence
+of generality. The lexical detector catches only direct overrides
+(\cbDetRec\% overall). The informative difference lies in the 25 benign
+high-privilege calls. \clear{} escalates \cbClearFer\% of them, the
+Trust-Boundary gate \cbTbFer\%, and the PROV-Guard engine and confirm-all
+\cbPgFer\% and \cbCallFer\%. \clear{}'s selectivity therefore carries over to
+domains (code/IDE, webhook export, IAM-like sharing) and tools it was not
+designed on.
+
+The conclusion depends on trusting the benchmark's ``workspace internal''
+label. If internal workspace content is also treated as untrusted, \clear{}'s
+false escalation rises to \cbClearFerAlt\%. On Trust-Boundary-8, which has no
+arguments and hence no lineage, \clear{} escalates 2 of 4 attacks. One miss is
+output-only (``reveal the system prompt''). The other exposes a failure of the
+lexical envelope compiler: the adjective ``shared'' in ``the shared planning
+file'' enabled the sharing capability.
+
+\begin{table}[t]
+\centering\small
+\caption{E2: call-level stress test on the scenarios of the two earlier iterations. FER = false escalation rate on benign calls; ``high-priv.'' = the 25 benign external/high-privilege calls. The PROV-Guard engine was not designed for argument-free fixtures.}
+\label{tab:cross}
+\resizebox{\linewidth}{!}{\input{generated/cross_benchmark.tex}}
+\end{table}
+
 \subsection{RQ4: Fallible, habituating users (simulation)}
 \label{sec:human}
 The ideal-user and deny-all bounds bracket \clear{}'s security. Real users lie
@@ -798,6 +1002,19 @@ confirm-all with provenance nearly matches \clear{}. These are predictions
 conditional on the model, and they become the confirmatory hypotheses of the
 user study.
 
+\paragraph{Heterogeneous populations (E3).} Drawing users from mixtures of
+expertise strata does not change the ordering (\cref{tab:pop}). Full \clear{}
+yields \popBalClear\% end-to-end ASR against \popBalCall\% for confirm-all in a
+balanced population, \popNovClear\% vs.\ \popNovCall\% in a mostly-novice one,
+and \popExpClear\% vs.\ \popExpCall\% in a mostly-expert one.
+
+\begin{table}[t]
+\centering\small
+\caption{E3 (simulation, \emph{not human data}): end-to-end ASR (\%) for heterogeneous user populations.}
+\label{tab:pop}
+\input{generated/population.tex}
+\end{table}
+
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_human_sim.pdf}
@@ -820,6 +1037,8 @@ H3 & Fail-closed BU above confirm-all-deny; no BU loss with ideal user & Support
 H4 & Removing provenance raises ASR; removing $\iota$ costs little; lexical detection fails under evasion & Supported (\cref{tab:ablation}, \cref{fig:curves}) \\
 H5 & Lower end-to-end ASR than confirm-all for fallible users & Supported \emph{in simulation only} (\simShare\% of grid) \\
 H6 & Provenance raises users' $d'$ without raising workload & \emph{Untested} (user study pending) \\
+H7 & Decoding-aware lineage defeats value laundering at no cost on ordinary traffic & Supported for the five value encodings (\laundVtwoVal\% vs.\ \laundVoneMin--\laundVoneMax\%); partly for whole-block encoding (\cref{tab:launder}) \\
+H8 & Goal-drift scoring adds security beyond provenance and envelope & \emph{Not supported}: +22\% dialogs on development data, no ASR gain; rejected \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -829,23 +1048,91 @@ H6 & Provenance raises users' $d'$ without raising workload & \emph{Untested} (u
 \label{sec:study}
 The repository contains a complete protocol, consent form, debriefing and
 analysis plan. They are ready for ethics review but have not been executed.
-\textbf{Design}: three between-subjects conditions. (A) Full \clear{}. (B)
-Confirm-all with generic dialogs. (C) \clear{}'s selectivity with generic
-dialogs, which isolates selectivity (C vs.\ B) from evidence (A vs.\ C). Each
-participant supervises 16 real GPT-4o trajectories, 4 of which contain a
+\textbf{Design}: a between-subjects $2{\times}2$ factorial crossing
+\emph{selectivity} (ask about every side-effecting action vs.\ only about
+\clear{} escalations) with \emph{evidence} (generic dialog vs.\ provenance,
+excerpt, preview and forcing). The four cells are full \clear{} (A),
+confirm-all (B), \clear{} selectivity only (C) and confirm-all with evidence
+(D). This design separates the two levers that the simulation predicts to
+compound (\cref{fig:human}), and it implements a factorial design recommended
+in an earlier iteration of this project. Each participant supervises 16 real GPT-4o trajectories, 4 of which contain a
 successful injection. Order is counterbalanced, and attention checks are
-embedded. \textbf{Primary outcomes}: prevention of injected actions and
-completion of benign tasks per task. \textbf{Secondary outcomes}: per-dialog
+embedded. Every escalated action carries the computed consequence preview
+(P7). \textbf{Primary outcomes}: prevention of injected actions and completion
+of benign tasks, per task. \textbf{Secondary outcomes}: per-dialog
 accuracy, SDT $d'$ and $c$, decision time, SUS~\citep{brooke1996sus}, raw
 NASA-TLX~\citep{hart1988nasatlx}, and trust in automation~\citep{jian2000trust}.
 \textbf{Analysis}: a mixed-effects logistic regression
-(\texttt{prevented $\sim$ condition + (1|participant) + (1|scenario)}) with
-Holm-adjusted planned contrasts, and non-inferiority tests for benign completion
-and workload. \textbf{Power}: 60 participants per condition detect $d=0.6$ at
-$\alpha=.05/3$ with power .80. We plan 65 per condition to allow exclusions.
+(\texttt{prevented $\sim$ selective $\times$ evidence + (1|participant) +
+(1|scenario)}) testing the two main effects with Holm correction, and
+non-inferiority tests for benign completion and workload (A vs.\ B).
+\textbf{Power}: each main effect compares 110 against 110 participants. This
+detects $d=0.4$ at $\alpha=.05$ with power .80 (100 needed per level). We plan
+55 per cell ($N=220$). The interaction is exploratory.
 The apparatus logs every decision, response time, forcing answer, envelope edit
 and undo. It was verified with an automated browser run of all 16 scenarios in
-every condition: \clear{} raised 13 dialogs and confirm-all 18.
+each of the five conditions: \clear{} and its generic variant raised 13
+dialogs, and both confirm-all variants raised 18, with no client errors.
+
+% =========================================================================
+\section{Lessons from three design iterations}
+\label{sec:lessons}
+\clear{} is the third iteration of this project. Its predecessors were built
+with different AI research assistants, and their artefacts are preserved in the
+repository. Auditing them yielded both design ideas and a methodological
+warning.
+
+\paragraph{What was adopted.} The first iteration (\emph{Trust Boundary Lab})
+framed the task as \emph{source-to-action review}. That framing became P2's
+excerpt display. It also proposed the factorial study design adopted in
+\cref{sec:study}. The second iteration (\emph{PROV-Guard}) proposed
+decoded-payload provenance, goal-drift scoring and counterfactual previews. Its
+decoding idea became decoding-aware lineage (P2, \cref{prop:launder}, E1), and
+its preview idea became P7 with \emph{computed} state differences. Goal drift
+was tested and rejected (H8).
+
+\paragraph{What was not adopted, and why.} PROV-Guard reported a 92.6\% attack
+success rate for binary confirmation dialogs, $d'=4.21$ and a 22.9\% NASA-TLX
+reduction for its framework, and $p$-values down to $10^{-16}$ with Cohen's
+$d\approx-49$. All of these came from a simulated user whose response to each
+interface feature was written into the code. For example, hiding provenance
+multiplied the ``cue clarity'' of an attack by 0.42. Re-running its own
+pipeline with only these per-feature multipliers set to neutral moves the
+ablation results substantially:
+
+\begin{center}\small
+\begin{tabular}{lcc}
+\toprule
+Condition (simulated ASR, \%) & as published & multipliers neutral \\
+\midrule
+full framework & \auditFullRep & \auditFullNeu \\
+without goal drift & \auditNoCgasdRep & \auditNoCgasdNeu \\
+without counterfactual preview & \auditNoIcspRep & \auditNoIcspNeu \\
+without provenance & \auditNoDlpaRep & \auditNoDlpaNeu \\
+binary modal & \auditModalRep & \auditModalNeu \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The component ranking is therefore an artefact of chosen constants. In that
+iteration, the ``Spotlighting'' baseline was a table of catch probabilities,
+and no defence had 100\% ASR by construction. Its benchmark is also separable
+by a single provenance rule (\cref{sec:v2method}). The first iteration had
+briefly scored risk with the ground-truth attack label before correcting
+itself.
+
+\paragraph{Reporting rules.} We derive four rules, which this paper follows.
+\begin{enumerate}[leftmargin=*,itemsep=1pt]
+\item Agent behaviour must come from recorded or live agents, and outcomes from
+  the benchmark's own predicates.
+\item Simulated humans may generate hypotheses but never results. Every
+  parameter is swept and every figure is labelled.
+\item Inferential statistics over simulated participants are not reported.
+\item Defences are evaluated blind to labels, and synthetic benchmarks are
+  checked for trivial separability before use.
+\end{enumerate}
+As AI assistants increasingly draft research artefacts, we believe such audits
+should become routine in HCI-security work.
 
 % =========================================================================
 \section{Discussion}
@@ -918,6 +1205,16 @@ mitigates but does not eliminate designer bias. Lexical attribution can miss
 transformed values. These fall into the weakly tainted ``unattributed'' class
 rather than being trusted.
 
+\paragraph{Stress benchmarks and post-hoc fixes.} E2 relies on synthetic,
+single-step scenarios that are separable by construction. It can show coverage
+and false-escalation behaviour on unfamiliar tools and domains, but not
+agent-level security. E1 assumes that agents follow encoded injections as
+readily as plain ones. The v2.1 decoder fix was found on held-out data and is
+therefore reported separately from the frozen v2. The lexical envelope compiler
+can be misled by word forms (``shared''); an LLM-based compiler that sees only
+the user's prompt is a natural replacement, but it must itself be shown to be
+injection-proof.
+
 \paragraph{Labels.} Call-level labels combine two criteria with high agreement
 ($\kappa=\labelKappa$). Episode-level outcomes use AgentDojo's predicates and do
 not depend on our labels, except in the ideal-user mode.
@@ -938,19 +1235,25 @@ All source code, configurations, the tool manifest, derived per-episode and
 per-call datasets, analysis scripts, figures, tests, the interactive console
 and the study materials are available in the project repository
 (\url{https://github.com/mazharulmd/HCI}). The raw trajectories are fetched from
-the AgentDojo repository (MIT licence) at the pinned commit.
+the AgentDojo repository (MIT licence) at the pinned commit. The artefacts of
+the two earlier iterations are preserved on separate branches, and the audit
+in \cref{sec:lessons} can be reproduced from \texttt{results/audit/}.
 
 \section*{Ethics statement}
 No human participants were involved. The proposed user study requires approval
 by an institutional ethics board before any data collection.
 
 \section*{Declaration of generative AI use}
-The literature search, implementation, experiments and drafting of this
-manuscript were carried out with substantial assistance from an AI research
-assistant (Anthropic Claude) operating under the authors' direction. The authors
-are responsible for verifying all content. Every numerical result is generated
-by the released code, and every reference was checked against a bibliographic
-record (verification log in the repository).
+This project was carried out in three iterations with three AI research
+assistants: OpenAI ChatGPT, Google Gemini and Anthropic Claude, operating under
+the authors' direction. The final version, including the literature search,
+implementation, experiments, audit of the earlier iterations and drafting of
+this manuscript, was produced with substantial assistance from Anthropic
+Claude. Findings from the earlier iterations that rested on simulated
+participants are \emph{not} reported as results (\cref{sec:lessons}). The
+authors are responsible for verifying all content. Every numerical result is
+generated by the released code, and every reference was checked against a
+bibliographic record (verification log in the repository).
 
 \bibliographystyle{plainnat}
 \bibliography{references}

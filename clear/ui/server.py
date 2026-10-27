@@ -3,10 +3,12 @@
     python -m clear.ui.server --port 8765
     open http://localhost:8765/?condition=clear&pid=P001
 
-Conditions (between- or within-subjects, see docs/user_study/protocol.md):
-    clear        risk-adaptive escalation with provenance evidence (CLEAR)
-    confirm_all  generic confirmation for every side-effecting action
-    none         no mediation: the agent acts autonomously (audit log only)
+Conditions (2x2 factorial selectivity x evidence, see docs/user_study/protocol.md):
+    clear                 selective escalation + evidence dialogs (full CLEAR)
+    clear_generic         selective escalation, generic dialogs
+    confirm_all_evidence  every side-effecting action, evidence dialogs
+    confirm_all           every side-effecting action, generic dialogs
+    none                  no mediation: the agent acts autonomously (audit log only)
 
 Decision events and questionnaire answers are appended to
 ``user_study_logs/<pid>.jsonl``. No personal data is collected beyond the

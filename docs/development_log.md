@@ -57,3 +57,32 @@ ideal-user ASR.
 | Lexical goal-drift feature γ (w = 0.3) | PROV-Guard CGASD (goal-mismatch component only) | ASR unchanged (0%), dialogs per benign task +22% (1.108 → 1.351), auto-deny BU −2.7 pp | **rejected**; reported as a negative result |
 
 `configs/clear_default.yaml` (v1) is unchanged, and all v1 results remain reproducible.
+
+v2 domain extension (no effect on AgentDojo): a `code_exec` capability class
+(run/execute/shell/command/script/test/...) was added to the envelope lexicon
+for the code/IDE tools of the stress benchmarks. No AgentDojo tool carries this
+capability, so all AgentDojo results are unaffected.
+
+### v2.1: post-hoc decoder robustness fix (after E1)
+
+**This change was made after seeing held-out E1 results. It is therefore not a
+confirmatory result and is reported separately from frozen v2.**
+
+E1 showed that v2 still let 8.1% of attacks through when the whole injection
+block was base64-encoded, against 4.1% for the plain block. Two causes were found:
+
+1. Serialised tool output contains literal `\n` escape sequences. The encoded
+   payload was glued to them (for example `\nSW1wb3J0...`), so the base64 run
+   did not start at a token boundary and was never decoded.
+2. Decoded payloads were checked for argument lineage but were not scored for
+   instruction-likeness (ι).
+
+`configs/clear_v2_1.yaml` sets `provenance.decode_robust: true`. This
+un-escapes literal escapes, scans base64 runs at offsets 0–7 and hex runs at
+offsets 0–1, and scores decoded (non-rot13) text for ι. With the flag off, the
+code path is byte-identical to v2 (regression test in `tests/test_v2.py`).
+
+Result: E1 block-base64 residual ASR is 4.06%, equal to the plain block on the
+same episodes; no episode succeeds laundered that fails plain. On ordinary
+held-out traffic, ideal-user ASR and dialogs per benign task are reported in
+`results/tables/offline_variants.csv`.

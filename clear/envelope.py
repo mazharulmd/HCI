@@ -36,6 +36,8 @@ CAPABILITY_LEXICON: dict[str, list[str]] = {
                     r"restaurant", r"table"],
     "workspace_admin": [r"invite", r"add .* (to|in) (the )?(channel|workspace|slack)", r"remove .* from",
                         r"join", r"onboard"],
+    "code_exec": [r"run", r"execute", r"shell", r"command", r"script", r"terminal", r"build", r"install",
+                  r"deploy", r"compile", r"test"],
     "web_fetch": [r"website", r"webpage", r"web page", r"url", r"link", r"https?://", r"www\.",
                   r"\.com\b", r"\.org\b", r"blog", r"site"],
 }

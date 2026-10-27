@@ -1,0 +1,46 @@
+# Tool manifest for the call-level stress benchmarks inherited from the earlier
+# PROV-Guard (Gemini) and Trust Boundary Lab (ChatGPT) iterations. Written from
+# tool names/semantics, using the same scale as configs/tool_manifest.yaml.
+defaults:
+  capability: read
+  sensitivity: 0.0
+  reversible: true
+  target_args: []
+  content_args: []
+  value_args: []
+  output_trust: untrusted
+  private_output: false
+tools:
+  # ---------------- PROV-Guard benchmark
+  summarize_thread: {}
+  read_emails: {}
+  read_document: {}
+  search_drive: {}
+  inspect_invoice: {}
+  get_account_balance: {}
+  read_repo_issues: {}
+  analyze_code_diff: {}
+  list_calendar_events: {}
+  create_email_draft: {capability: file_write, sensitivity: 0.3, reversible: true, target_args: [recipient], content_args: [subject, body]}
+  update_workspace_note: {capability: file_write, sensitivity: 0.3, reversible: true, target_args: [note_name], content_args: [content]}
+  schedule_payment_draft: {capability: financial, sensitivity: 0.5, reversible: true, target_args: [beneficiary_iban], value_args: [amount]}
+  write_unit_test_draft: {capability: file_write, sensitivity: 0.3, reversible: true, target_args: [file_path], content_args: [code_snippet]}
+  create_calendar_draft: {capability: calendar_write, sensitivity: 0.3, reversible: true, target_args: [attendee], content_args: [title]}
+  send_email: {capability: communicate, sensitivity: 0.8, reversible: false, target_args: [recipient], content_args: [subject, body]}
+  forward_email: {capability: communicate, sensitivity: 0.8, reversible: false, target_args: [recipient], content_args: [subject, body]}
+  share_file_external: {capability: communicate, sensitivity: 0.8, reversible: true, target_args: [file_name, recipient]}
+  export_to_webhook: {capability: communicate, sensitivity: 0.9, reversible: false, target_args: [file_name, target_url]}
+  send_external_invite: {capability: calendar_write, sensitivity: 0.6, reversible: true, target_args: [attendee], content_args: [title, notes]}
+  open_public_pull_request: {capability: communicate, sensitivity: 0.8, reversible: false, target_args: [repo_url], content_args: [payload_source]}
+  execute_wire_transfer: {capability: financial, sensitivity: 1.0, reversible: false, target_args: [beneficiary_iban], value_args: [amount]}
+  update_beneficiary_iban: {capability: financial, sensitivity: 1.0, reversible: true, target_args: [beneficiary_iban], value_args: [amount]}
+  execute_shell_command: {capability: code_exec, sensitivity: 1.0, reversible: false, target_args: [command], content_args: [payload_source]}
+  delete_calendar_events: {capability: delete, sensitivity: 0.7, reversible: false, target_args: [target_resource], content_args: [notes]}
+  # ---------------- Trust Boundary Lab fixtures (no arguments are given in that dataset)
+  calendar.create_event: {capability: calendar_write, sensitivity: 0.3, reversible: true}
+  mail.send: {capability: communicate, sensitivity: 0.8, reversible: false}
+  drive.read: {}
+  shell.execute: {capability: code_exec, sensitivity: 1.0, reversible: false}
+  browser.open: {capability: web_fetch, sensitivity: 0.4, reversible: true}
+  drive.change_sharing: {capability: communicate, sensitivity: 0.8, reversible: true}
+  filesystem.delete: {capability: delete, sensitivity: 0.7, reversible: false}
