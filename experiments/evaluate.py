@@ -48,6 +48,14 @@ VARIANTS: dict[str, set[str]] = {
     "clear_single_tier": {"tiers"},
 }
 GT_ENVELOPE_VARIANT = "clear_gt_envelope"
+# CLEAR v2: the combined version (decoding-aware lineage from the PROV-Guard iteration;
+# optional goal-drift feature). Each entry: (ablation set, config overrides).
+V2 = {"provenance": {"decode": True}}
+V2_VARIANTS: dict[str, tuple[set[str], dict]] = {
+    "clear_v2": (set(), V2),
+    "clear_v2_drift": (set(), {**V2, "risk": {"w_drift": 0.3}}),
+    "clear_v2_no_injection": ({"injection"}, V2),
+}
 CANDIDATE_VERSIONS = ["v1", "v1.1", "v1.1.1", "v1.1.2", "v1.2", "v1.2.1", "v1.2.2"]
 MAX_SUBSET_CALLS = 8
 
@@ -92,10 +100,21 @@ def necessity_labels(ep: Episode, calls, rep: Replayer, manifest: ToolManifest, 
     return out
 
 
+_V2_CFG_CACHE: dict[str, dict] = {}
+
+
+def _v2_cfg(name: str, overrides: dict) -> dict:
+    if name not in _V2_CFG_CACHE:
+        _V2_CFG_CACHE[name] = load_config(overrides=overrides)
+    return _V2_CFG_CACHE[name]
+
+
 # --------------------------------------------------------------------------- mediation pass
 def mediate(ep: Episode, manifest: ToolManifest, cfg: dict, gt_caps: set[str]):
     meds = {v: Mediator(manifest, cfg, ablate=ab) for v, ab in VARIANTS.items()}
     meds[GT_ENVELOPE_VARIANT] = Mediator(manifest, cfg)
+    for v, (ab, ov) in V2_VARIANTS.items():
+        meds[v] = Mediator(manifest, _v2_cfg(v, ov), ablate=ab)
     for v, m in meds.items():
         env = None
         if v == GT_ENVELOPE_VARIANT:
@@ -141,7 +160,7 @@ def mediate(ep: Episode, manifest: ToolManifest, cfg: dict, gt_caps: set[str]):
 def policy_dropsets(rows: dict[int, dict], injected: set[int]):
     """Return {policy_mode: (drop_set, n_confirm, n_force, n_notify)}."""
     out = {}
-    names = list(VARIANTS) + [GT_ENVELOPE_VARIANT]
+    names = list(VARIANTS) + [GT_ENVELOPE_VARIANT] + list(V2_VARIANTS)
     for v in names:
         conf = {i for i, r in rows.items() if r[f"tier_{v}"] >= Tier.CONFIRM}
         force = {i for i, r in rows.items() if r[f"tier_{v}"] >= Tier.FORCE}

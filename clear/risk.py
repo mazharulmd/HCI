@@ -25,6 +25,8 @@ talk the mediator out of escalating by rephrasing the injection.
 from __future__ import annotations
 
 import enum
+import math
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -72,6 +74,36 @@ class Assessment:
 def _short(v: Any, n: int = 48) -> str:
     s = str(v)
     return s if len(s) <= n else s[: n - 3] + "..."
+
+
+_STOP = {"the", "a", "an", "to", "of", "and", "or", "for", "in", "on", "at", "by", "with", "from", "my", "me", "i",
+         "is", "are", "be", "it", "this", "that", "please", "can", "you", "your", "do", "all", "as", "into", "about"}
+_TOK = re.compile(r"[a-z0-9]+")
+
+
+def _bag(text: str) -> set[str]:
+    out = set()
+    for t in _TOK.findall(text.lower()):
+        if t in _STOP or len(t) < 2:
+            continue
+        out.add(t[:-1] if t.endswith("s") and len(t) > 3 else t)
+    return out
+
+
+def goal_drift(prompt: str, spec: ToolSpec, args: dict) -> float:
+    """Lexical goal-mismatch between the user's request and the proposed action (0 = aligned, 1 = disjoint).
+
+    Inspired by the semantic-drift pattern (CGASD) of the PROV-Guard iteration. Only
+    the goal-mismatch component is kept: its capability-escalation and entity-diversion
+    components duplicate CLEAR's deviation and taint features.
+    """
+    from clear.envelope import CAPABILITY_LEXICON
+    action = " ".join([spec.name.replace("_", " ")] + [w.replace("\\", "") for w in CAPABILITY_LEXICON.get(spec.capability, [])]
+                      + [str(v) for n in (*spec.target_args, *spec.value_args) for v in flatten_values(args.get(n))])
+    a, u = _bag(action), _bag(prompt)
+    if not a or not u:
+        return 1.0
+    return 1.0 - len(a & u) / math.sqrt(len(a) * len(u))
 
 
 class RiskModel:
@@ -181,6 +213,11 @@ class RiskModel:
         x = {"tau": tau, "kappa": kappa, "delta": delta, "iota": iota}
         w = {"tau": self.r["w_taint"], "kappa": self.r["w_exfil"],
              "delta": self.r["w_deviation"], "iota": self.r["w_injection"]}
+        if self.r.get("w_drift", 0.0) > 0 and "drift" not in self.ablate:
+            x["gamma"] = goal_drift(ledger.user_text, spec, args)
+            w["gamma"] = self.r["w_drift"]
+            if x["gamma"] >= 0.9:
+                reasons.append("The action has little in common with what you asked for")
         remaining = 1.0
         for k in x:
             remaining *= 1.0 - w[k] * x[k]

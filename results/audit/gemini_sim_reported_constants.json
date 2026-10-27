@@ -1,0 +1,56 @@
+{
+ "B0_NO_DEFENSE": {
+  "asr_mean": 100.0,
+  "fpr_mean": 0.0,
+  "d_prime_mean": -0.14,
+  "nasa_tlx_mean": 8.5
+ },
+ "B1_SPOTLIGHTING_SYSTEM": {
+  "asr_mean": 56.11,
+  "fpr_mean": 4.85,
+  "d_prime_mean": 1.5,
+  "nasa_tlx_mean": 11.23
+ },
+ "B2_STATIC_BANNER": {
+  "asr_mean": 92.5,
+  "fpr_mean": 15.38,
+  "d_prime_mean": -0.41,
+  "nasa_tlx_mean": 67.77
+ },
+ "B3_BINARY_MODAL": {
+  "asr_mean": 92.62,
+  "fpr_mean": 9.62,
+  "d_prime_mean": -0.14,
+  "nasa_tlx_mean": 60.74
+ },
+ "ABL_NO_DLPA": {
+  "asr_mean": 77.74,
+  "fpr_mean": 2.33,
+  "d_prime_mean": 1.2,
+  "nasa_tlx_mean": 49.04
+ },
+ "ABL_NO_CGASD": {
+  "asr_mean": 35.35,
+  "fpr_mean": 1.56,
+  "d_prime_mean": 2.49,
+  "nasa_tlx_mean": 46.85
+ },
+ "ABL_NO_AFTCG": {
+  "asr_mean": 77.9,
+  "fpr_mean": 3.33,
+  "d_prime_mean": 1.05,
+  "nasa_tlx_mean": 49.95
+ },
+ "ABL_NO_ICSP": {
+  "asr_mean": 39.88,
+  "fpr_mean": 1.42,
+  "d_prime_mean": 2.42,
+  "nasa_tlx_mean": 48.97
+ },
+ "PROV_GUARD_FULL": {
+  "asr_mean": 2.54,
+  "fpr_mean": 1.1,
+  "d_prime_mean": 4.21,
+  "nasa_tlx_mean": 46.82
+ }
+}

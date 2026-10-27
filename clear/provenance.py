@@ -20,6 +20,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Iterable
 
+from clear.deobfuscate import canonical, decoded_variants, obfuscation_markers
 from clear.signals import Span, injection_likeness
 
 ORIGIN_RANK = {"user": 0, "trusted": 1, "external": 2, "unattributed": 3, "trivial": -1}
@@ -94,12 +95,22 @@ class Source:
     step: int = 0
     injection_score: float = 0.0
     injection_spans: list[Span] = field(default_factory=list)
+    decode: bool = False
+    obfuscation: list[str] = field(default_factory=list)
     _norm: str = ""
     _compact: str = ""
+    _alt_norms: list[str] = field(default_factory=list)
+    _alt_compacts: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self._norm = norm(self.text)
         self._compact = compact(self.text)
+        if self.decode and self.trust == "untrusted":
+            # decoding-aware lineage: canonical form + decoded payload variants
+            variants = [canonical(self.text)] + [canonical(v) for v in decoded_variants(self.text)]
+            self._alt_norms = [norm(v) for v in variants]
+            self._alt_compacts = [compact(v) for v in variants]
+            self.obfuscation = obfuscation_markers(self.text)
 
     @property
     def label(self) -> str:
@@ -109,14 +120,23 @@ class Source:
         return self.kind
 
     def contains(self, value: str) -> bool:
+        if self._match(value, self._norm, self._compact):
+            return True
+        if self._alt_norms:
+            cval = canonical(value)
+            return any(self._match(cval, n, c) for n, c in zip(self._alt_norms, self._alt_compacts))
+        return False
+
+    @staticmethod
+    def _match(value: str, normed: str, compacted: str) -> bool:
         nv = norm(value)
-        if nv and nv in self._norm:
+        if nv and nv in normed:
             return True
         cu = canonical_url(value)
-        if cu and cu in self._norm:
+        if cu and cu in normed:
             return True
         cv = compact(value)
-        return len(cv) >= 6 and any(c.isdigit() or c == "@" for c in cv) and cv in self._compact
+        return len(cv) >= 6 and any(c.isdigit() or c == "@" for c in cv) and cv in compacted
 
     def snippet(self, value: str, width: int = 60) -> str:
         idx = self._norm.find(norm(value))
@@ -140,15 +160,24 @@ class Attribution:
 class ProvenanceLedger:
     """Append-only record of everything the agent has seen in one task."""
 
-    def __init__(self, min_value_len: int = 3) -> None:
+    def __init__(self, min_value_len: int = 3, decode: bool = False, obfuscation_weight: float = 0.5) -> None:
         self.sources: list[Source] = []
         self.min_value_len = min_value_len
+        self.decode = decode
+        self.obfuscation_weight = obfuscation_weight
 
     # ------------------------------------------------------------ recording
     def _add(self, **kw) -> Source:
-        src = Source(sid=len(self.sources), **kw)
+        src = Source(sid=len(self.sources), decode=self.decode, **kw)
         if src.trust == "untrusted":
             src.injection_score, src.injection_spans = injection_likeness(src.text)
+            if self.decode:
+                # score the canonical text (homoglyph / invisible-character evasion);
+                # keep spans on the original text so the interface can highlight them
+                src.injection_score = max(src.injection_score, injection_likeness(canonical(src.text))[0])
+            if self.decode and src.obfuscation:
+                # hiding text from the human reader is itself an injection cue
+                src.injection_score = 1 - (1 - src.injection_score) * (1 - self.obfuscation_weight)
         self.sources.append(src)
         return src
 

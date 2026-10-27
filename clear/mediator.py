@@ -55,19 +55,27 @@ class Mediator:
         self.cfg = cfg
         self.risk = RiskModel(cfg, ablate)
         self.envelope_fn = envelope_fn
-        self.ledger = ProvenanceLedger(cfg.get("provenance", {}).get("min_value_len", 3))
+        self.ledger = self._new_ledger()
         self.envelope: IntentEnvelope = IntentEnvelope(prompt="")
         self.history: list[tuple[Assessment, Decision | None]] = []
         self.step = 0
 
+    def _new_ledger(self) -> ProvenanceLedger:
+        p = self.cfg.get("provenance", {})
+        return ProvenanceLedger(p.get("min_value_len", 3), decode=bool(p.get("decode", False)),
+                                obfuscation_weight=p.get("obfuscation_weight", 0.5))
+
     @classmethod
-    def default(cls, ablate: set[str] | None = None, overrides: dict | None = None) -> "Mediator":
-        return cls(ToolManifest.load(), load_config(overrides=overrides), ablate)
+    def default(cls, ablate: set[str] | None = None, overrides: dict | None = None,
+                config: str | None = None) -> "Mediator":
+        """``config``: path to a YAML config (default: configs/clear_default.yaml, i.e. v1;
+        use configs/clear_v2.yaml for the combined version with decoding-aware lineage)."""
+        return cls(ToolManifest.load(), load_config(config, overrides=overrides), ablate)
 
     # ------------------------------------------------------------ lifecycle
     def start_task(self, user_prompt: str, system_prompt: str | None = None,
                    envelope: IntentEnvelope | None = None) -> IntentEnvelope:
-        self.ledger = ProvenanceLedger(self.cfg.get("provenance", {}).get("min_value_len", 3))
+        self.ledger = self._new_ledger()
         if system_prompt:
             self.ledger.add_system(system_prompt)
         self.ledger.add_user(user_prompt)

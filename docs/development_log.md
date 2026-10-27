@@ -42,3 +42,18 @@ calls from 300 randomly sampled GPT-4o episodes with the final code: 0
 mismatches in any tier or risk value against the stored evaluation outputs.
 The UI also gained a `clear_generic` study condition. This affects no reported
 result.
+
+## v2 (combined version), 27 Oct 2026
+Ideas from the ChatGPT ("Trust Boundary Lab") and Gemini ("PROV-Guard")
+iterations were re-implemented as candidate CLEAR features and evaluated on the
+**same development split** (GPT-4o × banking/slack) before any held-out
+re-evaluation. The decision rule was fixed before the run: adopt a feature if it
+does not raise dialogs per benign task by more than 10% and does not raise
+ideal-user ASR.
+
+| Candidate | Origin | Dev result (vs v1) | Decision |
+|---|---|---|---|
+| Decoding-aware lineage (base64, hex, %-enc., HTML entities, homoglyphs, zero-width, `[at]/[dot]`, rot13) + obfuscation as an injection cue | PROV-Guard DLPA | identical ASR (0%), BU and dialogs (1.108 per benign task) | **adopted** (`configs/clear_v2.yaml`) |
+| Lexical goal-drift feature γ (w = 0.3) | PROV-Guard CGASD (goal-mismatch component only) | ASR unchanged (0%), dialogs per benign task +22% (1.108 → 1.351), auto-deny BU −2.7 pp | **rejected**; reported as a negative result |
+
+`configs/clear_default.yaml` (v1) is unchanged, and all v1 results remain reproducible.

@@ -1,0 +1,8 @@
+malicious, has_external_chunk, critical_value_in_external, critical_value_in_prompt -> count
+(False, False, False, False) 40
+(False, False, False, True) 35
+(False, True, False, False) 5
+(False, True, False, True) 10
+(False, True, True, True) 10
+(True, True, True, False) 150
+Counter({'EXTERNAL_UNTRUSTED': 175, 'WORKSPACE_INTERNAL': 75})
