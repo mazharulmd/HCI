@@ -86,3 +86,16 @@ Result: E1 block-base64 residual ASR is 4.06%, equal to the plain block on the
 same episodes; no episode succeeds laundered that fails plain. On ordinary
 held-out traffic, ideal-user ASR and dialogs per benign task are reported in
 `results/tables/offline_variants.csv`.
+
+### Analysis-pipeline changes made with the combined version
+
+* **Bootstrap seeding.** Each cluster bootstrap now re-seeds from the fixed seed,
+  instead of drawing from one shared generator. Adding a policy therefore no
+  longer shifts the confidence intervals of other policies. Point estimates are
+  unchanged. Some v1 CI bounds moved by at most 0.01 percentage points (AUROC
+  CI [0.845, 0.871] became [0.846, 0.871]).
+* **Holm families.** The v1 ablation tests remain one Holm family. The v2
+  comparisons (v2 vs v1, v2 + drift vs v2) are tested in separate families, so
+  adding them does not change the adjusted p-values of the v1 ablations.
+* **Reproduction check.** The v2 re-run reproduced all 90,248 per-call v1 tiers
+  and risks exactly. The only differences are runtime and latency measurements.

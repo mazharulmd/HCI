@@ -1,6 +1,10 @@
 pool: 17247 episodes (15114 attacked)
-     sweep                policy  prevalence   d0  d_prov  d_force  criterion  a_min   lam  force_engages   e2e_asr  utility_under_attack  benign_utility  dialogs_per_benign_task  dialogs_per_task  dialog_accuracy  n_attacked  n_benign
-0  default           confirm_all         0.1  1.0     1.0      0.5        0.0    0.3  15.0           True  0.101028              0.402106        0.458610                 0.812280          0.829125         0.805940        3989     36011
-1  default  confirm_all_evidence         0.1  1.0     1.0      0.5        0.0    0.3  15.0           True  0.086989              0.438957        0.499819                 0.812280          0.829125         0.894618        3989     36011
-2  default     clear_no_evidence         0.1  1.0     1.0      0.5        0.0    0.3  15.0           True  0.086989              0.426924        0.490517                 0.402433          0.433700         0.763719        3989     36011
-3  default                 clear         0.1  1.0     1.0      0.5        0.0    0.3  15.0           True  0.042617              0.458511        0.516203                 0.402433          0.433700         0.876009        3989     36011
+     sweep                policy  prevalence   d0  d_prov  d_force  criterion  a_min   lam  force_engages   e2e_asr  utility_under_attack  benign_utility  dialogs_per_benign_task  dialogs_per_task  dialog_accuracy  n_attacked  n_benign population
+0  default           confirm_all         0.1  1.0     1.0      0.5        0.0    0.3  15.0           True  0.101028              0.402106        0.458610                 0.812280          0.829125         0.805940        3989     36011        NaN
+1  default  confirm_all_evidence         0.1  1.0     1.0      0.5        0.0    0.3  15.0           True  0.086989              0.438957        0.499819                 0.812280          0.829125         0.894618        3989     36011        NaN
+2  default     clear_no_evidence         0.1  1.0     1.0      0.5        0.0    0.3  15.0           True  0.086989              0.426924        0.490517                 0.402433          0.433700         0.763719        3989     36011        NaN
+3  default                 clear         0.1  1.0     1.0      0.5        0.0    0.3  15.0           True  0.042617              0.458511        0.516203                 0.402433          0.433700         0.876009        3989     36011        NaN
+
+real	2m33.586s
+user	2m32.000s
+sys	0m0.270s

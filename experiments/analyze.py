@@ -38,7 +38,7 @@ if not any(RAW.glob("episodes_*.jsonl*")):
 TAB = ROOT / "results" / "tables"
 FIG = ROOT / "figures"
 DEFENCE_SUFFIXES = ("-repeat_user_prompt", "-spotlighting_with_delimiting", "-tool_filter", "-transformers_pi_detector")
-RNG = np.random.default_rng(20261026)
+SEED = 20261026   # each bootstrap re-seeds, so adding a policy never shifts another one's CI
 N_BOOT = 2000
 
 # reference categorical palette (fixed order; see figures/README.md)
@@ -112,9 +112,10 @@ def cluster_boot(df: pd.DataFrame, fn, n=N_BOOT) -> tuple[float, float, float]:
     keys = list(groups)
     if len(keys) < 2:
         return point, np.nan, np.nan
+    rng = np.random.default_rng(SEED)
     vals = []
     for _ in range(n):
-        pick = RNG.integers(0, len(keys), len(keys))
+        pick = rng.integers(0, len(keys), len(keys))
         idx = np.concatenate([groups[keys[i]] for i in pick])
         vals.append(fn(df.loc[idx]))
     lo, hi = np.nanpercentile(vals, [2.5, 97.5])
@@ -128,7 +129,7 @@ def boot_mean(df: pd.DataFrame, col: str, n=N_BOOT) -> tuple[float, float, float
     g = df.groupby("cluster")[col].agg(["sum", "count"])
     sums, cnts = g["sum"].to_numpy(float), g["count"].to_numpy(float)
     point = sums.sum() / cnts.sum()
-    pick = RNG.integers(0, len(g), size=(n, len(g)))
+    pick = np.random.default_rng(SEED).integers(0, len(g), size=(n, len(g)))
     vals = sums[pick].sum(1) / cnts[pick].sum(1)
     lo, hi = np.percentile(vals, [2.5, 97.5])
     return float(point), float(lo), float(hi)
@@ -729,7 +730,9 @@ def main() -> None:
     to_latex(pd.DataFrame(rows), TAB / "ablations.tex",
              "Ablations on held-out episodes. Recall: share of injected side-effecting calls escalated to CONFIRM or "
              "FORCE; FER: false escalation rate on benign side-effecting calls.", "tab:ablation", "lrrrrrrr")
-    abl_tests = paired_tests(core, "clear:oracle", [f"{v}:oracle" for v in variants[1:]], "s", "attacked")
+    # the v1 ablations form one Holm family; the v2 comparisons are tested separately
+    v1_abl = [v for v in variants[1:] if not v.startswith("clear_v2")]
+    abl_tests = paired_tests(core, "clear:oracle", [f"{v}:oracle" for v in v1_abl], "s", "attacked")
     abl_tests.to_csv(TAB / "ablation_tests.csv", index=False)
     statsout["ablation_tests"] = abl_tests.to_dict(orient="records")
 

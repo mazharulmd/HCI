@@ -1,0 +1,4 @@
+          config  asr_ideal_user  dialogs_per_benign_task  escalation_recall  false_escalation_rate  n_attacked  n_benign  n_heuristic
+0  clear_default        0.006929                 0.384542           0.987442               0.588803       14865      2096            0
+1       clear_v2        0.006929                 0.384542           0.987442               0.588803       14865      2096            0
+2     clear_v2_1        0.006929                 0.384542           0.987442               0.588803       14865      2096            0

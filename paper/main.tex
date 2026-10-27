@@ -78,10 +78,10 @@ success among attacks that beat the undefended agent. Lexical lineage then lets
 \laundVoneMin--\laundVoneMax\% succeed instead of \laundPlainVal\%, and
 decoding-aware lineage restores \laundVtwoVal\%. Against detector-evading phrasing, \clear{} holds at
 \asrEvadeClear\%, while a provenance-free mediator stays at or above
-\asrEvadeNoProvMin\%. On 258 synthetic stress scenarios spanning code, cloud
+\asrEvadeNoProvMin\%. On 250 template-generated stress scenarios spanning code, cloud
 and finance, \clear{} matches the recall of two alternative HCI engines with far
 fewer false escalations of benign high-privilege actions (\cbClearFer\% vs.\
-\cbTbFer\% and \cbPgFer\%). A goal-drift signal borrowed from an earlier
+\cbTbFer\% and \cbPgFer\%). On 8 argument-free fixtures it misses 2 of 4 attacks. A goal-drift signal borrowed from an earlier
 iteration was rejected on development data.
 
 A parametric, habituation-aware user model (\emph{not human data}) predicts
@@ -720,8 +720,8 @@ whole injection block. The agent's recorded calls are unchanged: they carry the
 decoded value, which is the attacker's goal. This is a worst case for the
 defender, since encoding usually lowers an injection's success. Executed calls
 and environments are unchanged, so ideal-user outcomes are exact; we look them
-up among the stored outcomes for every subset of denied injected calls. One
-robustness bug of the v2 decoder surfaced in this held-out experiment. Payloads
+up among the stored outcomes for every subset of denied injected calls. Two
+robustness gaps of the v2 decoder surfaced in this held-out experiment. Payloads
 glued to serialised ``\textbackslash n'' escapes were not detected, and decoded
 payload text was not scored for instruction-likeness. We fixed both in a
 \emph{post-hoc} v2.1, which we report separately from the frozen v2.
@@ -844,7 +844,7 @@ and disappears under evasion. Argument provenance is what buys robustness.
 \centering\small
 \caption{ASR (\%) by attack type for GPT-4o (629 security cases each). $-\iota$: \clear{} without its instruction-likeness feature.}
 \label{tab:attacks}
-\input{generated/attack_types.tex}
+\resizebox{\linewidth}{!}{\input{generated/attack_types.tex}}
 \end{table}
 
 \begin{figure}[t]
@@ -946,14 +946,15 @@ from the benchmark's separability, and we therefore do not read it as evidence
 of generality. The lexical detector catches only direct overrides
 (\cbDetRec\% overall). The informative difference lies in the 25 benign
 high-privilege calls. \clear{} escalates \cbClearFer\% of them, the
-Trust-Boundary gate \cbTbFer\%, and the PROV-Guard engine and confirm-all
-\cbPgFer\% and \cbCallFer\%. \clear{}'s selectivity therefore carries over to
-domains (code/IDE, webhook export, IAM-like sharing) and tools it was not
+Trust-Boundary gate \cbTbFer\%, the PROV-Guard engine \cbPgFer\% and confirm-all \cbCallFer\%. Within the limits
+of a template benchmark, this suggests that \clear{}'s selectivity carries over
+to domains (code/IDE, webhook export, IAM-like sharing) and tools it was not
 designed on.
 
 The conclusion depends on trusting the benchmark's ``workspace internal''
 label. If internal workspace content is also treated as untrusted, \clear{}'s
-false escalation rises to \cbClearFerAlt\%. On Trust-Boundary-8, which has no
+false escalation on these calls stays at \cbClearFerAlt\%, while the
+Trust-Boundary gate's rises to \cbTbFerAlt\%. On Trust-Boundary-8, which has no
 arguments and hence no lineage, \clear{} escalates 2 of 4 attacks. One miss is
 output-only (``reveal the system prompt''). The other exposes a failure of the
 lexical envelope compiler: the adjective ``shared'' in ``the shared planning
@@ -1037,7 +1038,7 @@ H3 & Fail-closed BU above confirm-all-deny; no BU loss with ideal user & Support
 H4 & Removing provenance raises ASR; removing $\iota$ costs little; lexical detection fails under evasion & Supported (\cref{tab:ablation}, \cref{fig:curves}) \\
 H5 & Lower end-to-end ASR than confirm-all for fallible users & Supported \emph{in simulation only} (\simShare\% of grid) \\
 H6 & Provenance raises users' $d'$ without raising workload & \emph{Untested} (user study pending) \\
-H7 & Decoding-aware lineage defeats value laundering at no cost on ordinary traffic & Supported for the five value encodings (\laundVtwoVal\% vs.\ \laundVoneMin--\laundVoneMax\%); partly for whole-block encoding (\cref{tab:launder}) \\
+H7 & Decoding-aware lineage defeats value laundering at no cost on ordinary traffic & Supported for the five value encodings (\laundVtwoVal\% vs.\ \laundVoneMin--\laundVoneMax\%); partly for whole-block encoding: frozen v2 removes about three quarters of the gap; the post-hoc v2.1 closes it (\cref{tab:launder}) \\
 H8 & Goal-drift scoring adds security beyond provenance and envelope & \emph{Not supported}: +22\% dialogs on development data, no ASR gain; rejected \\
 \bottomrule
 \end{tabular}

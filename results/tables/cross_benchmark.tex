@@ -1,0 +1,14 @@
+\begin{tabular}{l rrrrr r rr rr}
+\toprule
+ & \multicolumn{6}{c}{PROV-Guard-250: escalation recall (\%)} & \multicolumn{2}{c}{FER benign (\%)} & \multicolumn{2}{c}{Trust-Boundary-8 (\%)}\\
+\cmidrule(lr){2-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+Engine & Direct & Framing & Obfusc. & Chain & Mimicry & All & all & high-priv. & recall & FER \\
+\midrule
+CLEAR v2 & 100 & 100 & 100 & 100 & 100 & 100 & 5 & 20 & 50 & 0 \\
+CLEAR v1 & 100 & 100 & 100 & 100 & 100 & 100 & 5 & 20 & 50 & 0 \\
+PROV-Guard (Gemini) & 100 & 100 & 100 & 100 & 100 & 100 & 25 & 100 & -- & -- \\
+Trust-Boundary gate (ChatGPT) & 100 & 100 & 100 & 100 & 100 & 100 & 15 & 60 & 100 & 25 \\
+Confirm-all & 100 & 100 & 100 & 100 & 100 & 100 & 50 & 100 & 75 & 100 \\
+Lexical detector & 100 & 0 & 0 & 0 & 0 & 20 & 0 & 0 & 50 & 0 \\
+\bottomrule
+\end{tabular}

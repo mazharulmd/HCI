@@ -20,7 +20,7 @@ from experiments.analyze import C, GRID, INK, MUTED, setup_mpl  # noqa: E402
 
 TAB, FIG = ROOT / "results" / "tables", ROOT / "figures"
 MODES = [("base64", "base64 value"), ("hex", "hex value"), ("homoglyph", "homoglyph value"),
-         ("zero_width", "zero-width split"), ("bracket", "[at]/[dot] value"), ("block_base64", "whole block base64")]
+         ("zero_width", "zero-width split"), ("bracket", "value with [at]/[dot]"), ("block_base64", "whole block base64")]
 
 
 def pct(x, nd=1):

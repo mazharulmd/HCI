@@ -48,8 +48,8 @@ Replaying **24,648 recorded AgentDojo trajectories** of **22 LLM agents** and fi
 * A parametric, habituation-aware user model (**simulation, not human data**) predicts lower end-to-end compromise than confirm-all in 100 % of 243 parameter settings.
 
 Combined-version experiments:
-* **E1, provenance laundering.** Encoding the attacker's value lets lexical lineage (v1) be evaded by 6–8 % of previously successful attacks; decoding-aware lineage (v2) restores 0.6 %. See `results/tables/laundering_summary.csv`.
-* **E2, cross-benchmark stress test** on the PROV-Guard-250 and Trust-Boundary-8 scenarios. CLEAR keeps recall while falsely escalating far fewer benign high-privilege calls than the PROV-Guard engine and the Trust-Boundary gate. See `results/tables/cross_benchmark.csv`.
+* **E1, provenance laundering.** Encoding the attacker's value lets lexical lineage (v1) be evaded by 6–8 % of previously successful attacks; decoding-aware lineage (v2) restores 0.6 %. Base64-encoding the whole injection block is closed only by the post-hoc v2.1 fix (4.1 %, equal to the plain block), which is reported separately. See `results/tables/laundering_summary.csv`.
+* **E2, cross-benchmark stress test** on the PROV-Guard-250 and Trust-Boundary-8 scenarios. On the 250 template scenarios, CLEAR keeps full recall while falsely escalating far fewer benign high-privilege calls (20 %) than the Trust-Boundary gate (60 %) and the PROV-Guard engine (100 %). On the 8 argument-free Trust-Boundary fixtures it misses 2 of 4 attacks. See `results/tables/cross_benchmark.csv`.
 * **E3, heterogeneous users** (simulation). The ordering holds in novice-heavy and expert-heavy populations.
 
 All numbers are produced by the code in this repository: see `results/stats.json`, `results/tables/` and the manuscript in `paper/main.pdf`.
