@@ -64,8 +64,11 @@ every proposed tool call to its source; attribution is decoding-aware, so it
 resists provenance laundering. Contextual risk is scored from interpretable
 features and drives four escalation tiers. Dialogs pair source-to-action
 excerpts with a consequence preview computed in a sandbox, and the
-highest-risk tier adds a cognitive-forcing check. We prove an escalation floor
-that no attacker-controlled text can lower.
+highest-risk tier adds a cognitive-forcing check. We prove a conditional
+escalation floor: when the provenance ledger correctly attributes a
+consequential target to an untrusted source, attacker-controlled text alone
+cannot lower the resulting tier. This is not a guarantee of complete attack
+detection.
 
 We replay \nEpisodes{} real trajectories of \nModels{} LLM agents and five
 published defences in AgentDojo, recomputing the benchmark's own predicates
@@ -73,7 +76,7 @@ published defences in AgentDojo, recomputing the benchmark's own predicates
 attack success from \asrNone\% to \asrClearO\% with a perfectly discerning
 user, and to \asrClearA\% when every escalation is denied. It asks
 \dlgReduction\% fewer questions than confirm-every-action (\dlgClearO{} vs.\
-\dlgCallO{} per benign task; $p=\wilcoxP$). We also simulate an attacker who encodes the target value, measuring residual
+\dlgCallO{} per benign task; task-cluster test $p<.001$). We also simulate an attacker who encodes the target value, measuring residual
 success among attacks that beat the undefended agent. Lexical lineage then lets
 \laundVoneMin--\laundVoneMax\% succeed instead of \laundPlainVal\%, and
 decoding-aware lineage restores \laundVtwoVal\%. Against detector-evading phrasing, \clear{} holds at
@@ -87,8 +90,8 @@ iteration was rejected on development data.
 A parametric, habituation-aware user model (\emph{not human data}) predicts
 lower end-to-end compromise than confirm-all in \simShare\% of \simGridN{}
 settings and across heterogeneous user populations. We release all code, data,
-an instrumented console and a pre-registered $2{\times}2$ factorial user-study
-protocol, which has not yet been run.
+an instrumented console and a proposed $2{\times}2$ factorial user-study
+protocol, which has not been preregistered or run.
 \end{abstract}
 
 \noindent\textbf{Keywords:} prompt injection; LLM agents; human-in-the-loop; usable security; provenance; security warnings; habituation; human--AI interaction
@@ -170,7 +173,7 @@ rejected goal drift, and audited the earlier evidence (\cref{sec:lessons}).
 
 \paragraph{Contributions.}
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
-\item A structured review of 2023--2026 prompt-injection defences, organised by
+\item A structured rapid review of 2023--2026 prompt-injection defences, organised by
   the \emph{role of the human} and the \emph{evidence} the human receives. It
   identifies the gap at the intersection of system-level mediation and the
   human factors of escalation (\cref{sec:related}).
@@ -182,15 +185,15 @@ rejected goal drift, and audited the earlier evidence (\cref{sec:lessons}).
   replayer, baselines (including two alternative HCI defence engines), an
   instrumented console that doubles as a study apparatus, and 57 automated
   tests.
-\item The, to our knowledge, largest environment-grounded evaluation of a
-  human-in-the-loop prompt-injection defence. It covers \nEpisodes{} real
-  trajectories from \nModels{} LLMs and five published defences, and reports
-  security, utility \emph{and user burden}, with significance tests, ablations,
+\item An environment-grounded trace-replay evaluation of a human-in-the-loop
+  prompt-injection defence. It covers \nEpisodes{} recorded trajectories from
+  \nModels{} LLMs and five published defences, and reports
+  security, utility \emph{and user burden}, with task-clustered paired tests, ablations,
   a detector-evading attacker, a provenance-laundering attacker, a
   cross-benchmark stress test and latency (\cref{sec:method,sec:results}).
-\item A habituation-aware signal-detection model, robust to heterogeneous user
-  populations, that turns escalation decisions into end-to-end risk. We use it
-  to derive the hypotheses of a pre-registered $2{\times}2$ factorial user study
+\item A habituation-aware signal-detection model, examined across heterogeneous
+  user populations, that estimates end-to-end risk under stated assumptions. We use it
+  to motivate a proposed $2{\times}2$ factorial user study
   (selectivity $\times$ evidence), whose protocol and apparatus we release
   (\cref{sec:human,sec:study}).
 \item A reproducible audit of simulated ``user-study'' evidence produced in an
@@ -278,15 +281,21 @@ practitioners struggle to see what lies behind an agent's actions.
 Authenticated delegation frameworks address \emph{who} an agent acts
 for~\citep{south2025delegation}.
 
-The closest work to ours is \citet{su2026riskcards}. They propose Risk Cards,
-which show source-trust labels, data-sensitivity chips and a risk badge, and
-evaluate them on AgentDojo traces with a deterministic information-exposure
-proxy. \clear{} differs in four ways. It contributes a formal, ablated risk
-model with an attacker-independent escalation floor. It recomputes
-\emph{environment outcomes} (utility and security) rather than an exposure
-proxy. It treats \emph{interruption burden} as a first-class metric and
-compares against system-level and published defences with paired tests. And it
-models habituation explicitly, adding a differentiated forcing tier.
+The closest prior interface is Risk Cards~\citep{su2026riskcards}. Its
+published abstract describes a confirmation card combining source trust,
+sensitivity and permission cues, data-flow arrows, consequence previews, a
+risk badge, and safer alternatives. It evaluates an automated oversight proxy
+on 13,068 UI samples derived from 18 AgentDojo agent-pipeline runs; it does not
+report human-participant outcomes or replay card decisions to establish task
+state utility. CLEAR therefore does not claim novelty for provenance-aware
+risk cards, consequence previews, or confirmation under prompt injection. Its
+distinct contribution is a runtime mediator that enforces tool-call decisions,
+tracks argument lineage through supported decoding transformations, and
+evaluates the resulting call blocks against AgentDojo's stateful task and
+security predicates. It additionally reports interruption burden and
+examines, in a parametric simulation only, how habituation assumptions affect
+the comparison with confirm-all. These are methodological and systems
+contributions; the user-facing effects still require human-subject evaluation.
 
 \subsection{Warnings, habituation and reliance}
 Warning effectiveness depends on design: active warnings outperform passive
@@ -307,12 +316,20 @@ They motivate three \clear{} principles: ask rarely, show \emph{verifiable}
 provenance rather than an AI's opinion, and reserve forcing for the rare
 highest-risk case.
 
-\subsection{Gap}
-\Cref{tab:taxonomy} positions prior work by the human's role. No prior work
-jointly decides \emph{when} to involve the human using provenance-aware
-contextual risk with a formal floor, designs \emph{what} the human sees at
-argument level, \emph{and} evaluates the resulting human--machine system on
-real attacked trajectories in terms of security, utility and burden.
+\subsection{Narrowed gap and novelty}
+\Cref{tab:taxonomy} positions prior work by the human's role. Risk Cards
+already establishes a closely related human-facing risk-communication
+pattern, while recent permission studies examine overreach, policy authoring,
+and practitioner decision-making. The remaining gap supported by this review
+is narrower: prior confirmation-card work evaluates an information-exposure
+proxy, whereas CLEAR is an executable mediation policy evaluated by replaying
+recorded agent calls against benchmark state predicates. The added evidence
+concerns security--utility trade-offs, interruption burden, decoding-aware
+argument lineage, and a conditional monotonicity property of the risk model.
+No real users evaluated CLEAR, so this work does not establish that its
+interface improves human decisions. We make no claim to the first
+prompt-injection confirmation interface; the novelty claim is limited to the
+executable mediation and trace-replay contributions described above.
 
 \begin{table}[t]
 \centering\small
@@ -427,7 +444,7 @@ scope.
   laundered through such an encoding is therefore still traced to its source,
   and hiding text from the human reader is itself counted as an injection cue.
 \item[P3 Contextual risk.] Interpretable features are combined into an
-  expected-harm proxy (\cref{sec:formal}). Each nonzero feature yields a
+  uncalibrated, severity-weighted risk index (\cref{sec:formal}). Each nonzero feature yields a
   plain-language reason that is shown to the user.
 \item[P4 Risk-adaptive escalation.] Four tiers: \tier{ALLOW} (silent, logged),
   \tier{NOTIFY} (ambient notice with undo), \tier{CONFIRM} (blocking dialog with
@@ -485,10 +502,10 @@ Here $\rho_T(\mathsf{E})=1$, $\rho_T(\bot)=0.5$, $\rho_V(\mathsf{E})=\rho_K(\mat
 \textbf{Instruction-likeness} $\iota(a)=\max(\iota_{\text{attr}},\ \omega\,\iota_{\text{ctx}})$.
 $\iota_{\text{attr}}$ is the maximum instruction-likeness of the sources the arguments are attributed to. $\iota_{\text{ctx}}$ is the maximum over all untrusted sources read in the task. Instruction-likeness is computed by a transparent lexicon of attack strategies (context ignoring, fake authority, sequencing, fake completion, addressing the model).
 
-These features are combined by a noisy-OR into the probability that the action
-is unintended, and weighted by harm potential:
+These features are combined by a noisy-OR feature combiner and weighted by
+tool sensitivity to form an uncalibrated risk index:
 \begin{equation}
-P(a)=1-\prod_{i\in\{\tau,\kappa,\delta,\iota\}}\big(1-w_i x_i(a)\big),\qquad R(a)=s(f)\,P(a).
+Q(a)=1-\prod_{i\in\{\tau,\kappa,\delta,\iota\}}\big(1-w_i x_i(a)\big),\qquad R(a)=s(f)\,Q(a).
 \label{eq:risk}
 \end{equation}
 The tier is $\tier{FORCE}$ if $R\ge\theta_F$, $\tier{CONFIRM}$ if $R\ge\theta_C$,
@@ -496,11 +513,14 @@ and $\tier{NOTIFY}$ if $R\ge\theta_N$ (promoted to $\tier{CONFIRM}$ if $f$ is
 irreversible); otherwise it is $\tier{ALLOW}$. All weights and thresholds were
 fixed a priori: $w_\tau=0.9$, $w_\kappa=0.8$, $w_\delta=0.7$, $w_\iota=0.6$,
 $\omega=0.5$, $\theta_N=0.15$, $\theta_C=0.35$, $\theta_F=0.7$. They were not
-fitted to outcomes (\cref{sec:split}).
+fitted to outcomes (\cref{sec:split}). Neither $Q$ nor $R$ is a probability:
+the features overlap and the weights are not independently estimated event
+probabilities.
 
 \begin{proposition}[Escalation floor]
 \label{prop:floor}
-Let $a=(f,\mathbf{x})$ be a call with some target argument whose origin is
+Assume the provenance ledger has correctly recorded relevant sources and
+assigned their trust labels. Let $a=(f,\mathbf{x})$ be a call with some target argument whose origin is
 external, $o(v)=\mathsf{E}$, so that $\tau(a)=1$.
 (i) If $s(f)\ge\theta_C/w_\tau$, then $a$ is escalated to at least
 \tier{CONFIRM}, and if $s(f)\ge\theta_F/w_\tau$, to \tier{FORCE}.
@@ -512,7 +532,7 @@ therefore for every attacker-controlled text.
 \end{proposition}
 \begin{proof}
 Each factor $(1-w_ix_i)$ in \cref{eq:risk} lies in $[0,1]$, so
-$P(a)\ge 1-(1-w_\tau\tau(a))=w_\tau\tau(a)$ and $R(a)\ge s(f)\,w_\tau\,\tau(a)$.
+$Q(a)\ge 1-(1-w_\tau\tau(a))=w_\tau\tau(a)$ and $R(a)\ge s(f)\,w_\tau\,\tau(a)$.
 For (i), $\tau=1$ gives $R\ge s\,w_\tau\ge\theta_C$ (respectively $\theta_F$).
 For (ii), $\tau\ge0.4$ gives $R\ge0.4\,s\,w_\tau\ge\theta_N$, and irreversibility
 promotes \tier{NOTIFY} to \tier{CONFIRM}. The attacker controls only untrusted
@@ -680,9 +700,13 @@ level we report \textbf{escalation recall} (injected side-effecting calls
 reaching \tier{CONFIRM}/\tier{FORCE}), the \textbf{false escalation rate (FER)}
 on benign side-effecting calls, AUROC of $R$, and per-call latency. Confidence
 intervals are 95\% cluster-bootstrap percentiles (2{,}000 resamples; clusters
-are model $\times$ suite $\times$ user task). Paired binary outcomes use exact
-McNemar tests with Holm correction within each family. Paired counts use the
-Wilcoxon signed-rank test with matched-pairs rank-biserial correlation.
+are benchmark tasks shared across model pipelines). Paired policy contrasts
+average differences within task and use task-cluster sign-flip tests, with Holm
+correction within each family; episode-level discordant counts are descriptive.
+All sign assignments are enumerated through 20 task clusters; above 20,
+100{,}000 Monte Carlo assignments are used. Repeated runs of the same benchmark
+task are treated as dependent. The sign-flip test assumes symmetry of
+task-level paired differences; results are conditional on this assumption.
 
 \subsection{Development split and frozen configuration}
 \label{sec:split}
@@ -759,14 +783,14 @@ individual jitter, and three mixtures are compared.
 \Cref{tab:main} and \cref{fig:tradeoff} summarise the held-out results. Without
 a defence, \asrNone\% of attacked episodes succeed. \clear{} reduces this to
 \asrClearO\% \asrClearOCI{} with an ideal user and to \asrClearA\% when every
-escalation is denied. The reduction is significant against no defence (2{,}344
-vs.\ 0 discordant pairs), against the task-scoped allowlist (\asrEnv\%; 1{,}481
-vs.\ 0) and against the strict information-flow policy (\asrIfc\%; 285 vs.\ 2;
-all Holm-adjusted $p<10^{-80}$).
+escalation is denied. Episode-level discordant counts favour \clear{} over no defence (2{,}344
+vs.\ 0), the task-scoped allowlist (1{,}481 vs.\ 0) and the strict
+information-flow policy (285 vs.\ 2). These counts describe the replay sample;
+uncertainty and paired tests are computed at the task-cluster level.
 
 Two baselines achieve lower ASR on this attack. Confirm-all with an ideal user
 reaches \asrCallO\%: it asks about every side-effecting call, so it also
-catches the 23 episodes \clear{} lets through ($p=2.4\times10^{-7}$). The
+catches 23 episodes \clear{} lets through. The
 lexical injection detector reaches \asrDet\%, because its patterns match the
 \texttt{important\_instructions} template. It does so by aborting: utility under
 attack collapses to \uaDet\%, and \cref{sec:adaptive} shows the protection
@@ -787,8 +811,9 @@ it; it also accounts for most of confirm-all's residual. Excluding it,
 
 \subsection{RQ2: Burden and utility}
 \clear{} asks \dlgClearO{} questions per benign task against \dlgCallO{} for
-confirm-all, a \dlgReduction\% reduction. Every one of the 612 benign tasks with
-a difference favours \clear{} (Wilcoxon $p=\wilcoxP$, $r_{rb}=-1$).
+confirm-all, a \dlgReduction\% reduction. All 612 benign replay episodes with
+a difference favour \clear{}; repeated benchmark tasks are clustered for
+inference.
 \noDialogClear\% of benign tasks complete without any dialog, against
 \noDialogCall\% for confirm-all. In attacked episodes the numbers are
 \dlgAttClearO{} versus \dlgAttCallO. With an ideal user, neither policy loses
@@ -798,7 +823,8 @@ often restores the user's task.
 
 Without a human, fail-closed \clear{} keeps \buClearA\% benign utility. This is
 higher than confirm-all-deny (\buCallA\%; 274 vs.\ 0 discordant tasks) and the
-strict information-flow policy (\buIfc\%; 85 vs.\ 15; both $p<10^{-12}$). It
+strict information-flow policy (\buIfc\%; 85 vs.\ 15; task-cluster tests,
+Holm-adjusted $p<.001$). It
 remains well below the undefended \buNone\%: the legitimate actions that
 \clear{} escalates are exactly those that need a human.
 
@@ -1032,8 +1058,8 @@ and \popExpClear\% vs.\ \popExpCall\% in a mostly-expert one.
 \toprule
 & Hypothesis & Outcome \\
 \midrule
-H1 & Ideal-user ASR below no defence, allowlist and strict IFC; indistinguishable from confirm-all & \emph{Partly supported}: lower than all three; 0.15\,pp \emph{higher} than confirm-all ($p<10^{-6}$) \\
-H2 & Fewer dialogs per benign task than confirm-all & Supported ($-$\dlgReduction\%, $p=\wilcoxP$) \\
+H1 & Ideal-user ASR below no defence, allowlist and strict IFC; comparable to confirm-all & \emph{Partly supported}: lower than the first three; 0.15\,pp higher than confirm-all (task-cluster $p=.063$; no equivalence test) \\
+H2 & Fewer dialogs per benign task than confirm-all & Supported in trace replay ($-$\dlgReduction\%, task-cluster $p<.001$) \\
 H3 & Fail-closed BU above confirm-all-deny; no BU loss with ideal user & Supported (\buClearA{} vs.\ \buCallA\%; \buClearO{} = no defence) \\
 H4 & Removing provenance raises ASR; removing $\iota$ costs little; lexical detection fails under evasion & Supported (\cref{tab:ablation}, \cref{fig:curves}) \\
 H5 & Lower end-to-end ASR than confirm-all for fallible users & Supported \emph{in simulation only} (\simShare\% of grid) \\
@@ -1045,10 +1071,11 @@ H8 & Goal-drift scoring adds security beyond provenance and envelope & \emph{Not
 \end{table}
 
 % =========================================================================
-\section{Pre-registered user-study protocol}
+\section{Proposed user-study protocol}
 \label{sec:study}
-The repository contains a complete protocol, consent form, debriefing and
-analysis plan. They are ready for ethics review but have not been executed.
+The repository contains a proposed protocol, consent form, debriefing and
+analysis plan. They have not been submitted for ethics review, preregistered,
+or executed.
 \textbf{Design}: a between-subjects $2{\times}2$ factorial crossing
 \emph{selectivity} (ask about every side-effecting action vs.\ only about
 \clear{} escalations) with \emph{evidence} (generic dialog vs.\ provenance,
@@ -1067,9 +1094,11 @@ NASA-TLX~\citep{hart1988nasatlx}, and trust in automation~\citep{jian2000trust}.
 (\texttt{prevented $\sim$ selective $\times$ evidence + (1|participant) +
 (1|scenario)}) testing the two main effects with Holm correction, and
 non-inferiority tests for benign completion and workload (A vs.\ B).
-\textbf{Power}: each main effect compares 110 against 110 participants. This
-detects $d=0.4$ at $\alpha=.05$ with power .80 (100 needed per level). We plan
-55 per cell ($N=220$). The interaction is exploratory.
+\textbf{Sample-size planning}: $N=220$ is a provisional recruitment target,
+not a demonstrated power result. The independent-samples calculation does not
+establish power for the planned mixed-effects logistic model; simulation-based
+power analysis using pilot or justified design assumptions is required before
+recruitment. The interaction is exploratory.
 The apparatus logs every decision, response time, forcing answer, envelope edit
 and undo. It was verified with an automated browser run of all 16 scenarios in
 each of the five conditions: \clear{} and its generic variant raised 13
@@ -1181,8 +1210,8 @@ utility then drops for tasks that genuinely need judgement.
 \paragraph{No human-subject data.} All human-factors claims rest on a parametric
 model whose parameters are not estimated from people. The model encodes
 assumptions drawn from the literature (habituation, forcing, SDT), and our
-conclusions are conditional on them. The pre-registered study is the necessary
-next step.
+conclusions are conditional on them. An ethics-reviewed, prospectively
+registered study is the necessary next step.
 
 \paragraph{Replay instead of live agents.} Replaying recorded trajectories
 cannot observe how an agent adapts after a denied call; it might retry or find
@@ -1226,8 +1255,8 @@ Prompt-injection defences eventually ask a human. \clear{} makes that question
 rare, specific and verifiable. On \nEpisodes{} real agent trajectories it
 brings attack success from \asrNone\% to below 1\% while asking half as often as
 confirm-all, and it keeps that protection against attackers who evade
-text-based detection. Future work will run the pre-registered study, evaluate
-live agents with retry behaviour and optimised attacks on provenance, learn
+text-based detection. Future work will obtain ethics approval, preregister and
+run the proposed study, evaluate live agents with retry behaviour and optimised attacks on provenance, learn
 envelope compilers that remain injection-proof, and extend lineage to
 multi-agent and computer-use settings.
 

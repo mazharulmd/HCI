@@ -1,4 +1,4 @@
-# Development log (pre-registration of the frozen configuration)
+# Development and configuration-freeze log
 
 All design decisions below were made using **only the development split**:
 GPT-4o (`gpt-4o-2024-05-13`) traces on the AgentDojo **banking** and **slack**

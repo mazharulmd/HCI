@@ -8,10 +8,13 @@ For a proposed call a = (f, args) the model computes interpretable features
     delta  deviation from the intent envelope            (envelope)
     iota   instruction-likeness of untrusted content the action depends on
 
-and combines them as
+and combines them into a heuristic score:
 
-    P(unintended | x) = 1 - prod_i (1 - w_i x_i)        (noisy-OR)
-    R(a)              = s(f) * P(unintended | x)         (expected-harm proxy)
+    Q(a) = 1 - prod_i (1 - w_i x_i)       (noisy-OR feature combination)
+    R(a) = s(f) * Q(a)                     (severity-weighted risk index)
+
+Q and R are not calibrated probabilities or expected losses. The weights are
+design parameters, and the features are not independent random events.
 
 R is mapped to four escalation tiers: ALLOW < NOTIFY < CONFIRM < FORCE.
 
@@ -48,7 +51,7 @@ class Assessment:
     args: dict[str, Any]
     spec: ToolSpec
     features: dict[str, float]
-    p_unintended: float
+    unintended_score: float
     risk: float
     tier: Tier
     arg_provenance: dict[str, list[Attribution]] = field(default_factory=dict)
@@ -64,7 +67,7 @@ class Assessment:
         return {
             "tool": self.tool, "args": self.args, "capability": self.spec.capability,
             "sensitivity": self.spec.sensitivity, "reversible": self.spec.reversible,
-            "features": self.features, "p_unintended": self.p_unintended, "risk": self.risk,
+            "features": self.features, "unintended_score": self.unintended_score, "risk": self.risk,
             "tier": self.tier.name, "reasons": self.reasons, "evidence_sources": self.evidence_sources,
             "arg_provenance": {k: [a.__dict__ for a in v] for k, v in self.arg_provenance.items()},
             "latency_ms": self.latency_ms,
@@ -221,13 +224,13 @@ class RiskModel:
         remaining = 1.0
         for k in x:
             remaining *= 1.0 - w[k] * x[k]
-        p = 1.0 - remaining
-        risk = spec.sensitivity * p
+        q = 1.0 - remaining
+        risk = spec.sensitivity * q
         tier = self.tier_of(risk, spec)
         if tier == Tier.CONFIRM and risk < self.t["confirm"]:
             reasons.append("This action cannot be undone, so it needs your confirmation")
         feats = {"s": spec.sensitivity, **x, "iota_attr": iota_attr, "iota_ctx": iota_ctx}
-        return Assessment(spec.name, args, spec, feats, p, risk, tier, prov, reasons, sorted(evidence))
+        return Assessment(spec.name, args, spec, feats, q, risk, tier, prov, reasons, sorted(evidence))
 
     def tier_of(self, risk: float, spec: ToolSpec) -> Tier:
         if "tiers" in self.ablate:

@@ -43,7 +43,7 @@ Replaying **24,648 recorded AgentDojo trajectories** of **22 LLM agents** and fi
 | **CLEAR (ideal user)** | **0.7 %** | **54.4 %** | **0.38** |
 | **CLEAR (no human, escalations denied)** | **0.7 %** | 35.2 % | 0.38 |
 
-* 51 % fewer dialogs than confirm-all (Wilcoxon p = 1.6×10⁻¹¹⁶). 74 % of benign tasks need no dialog at all.
+* 51 % fewer dialogs than confirm-all in this trace replay; 74 % of benign tasks need no dialog at all. Inferential comparisons are clustered by benchmark task.
 * Against a **detector-evading attacker**, CLEAR stays at 0.9 % ASR. A provenance-free mediator cannot get below 9.3 % at any threshold, and the lexical detector reverts to 16.5 %.
 * A parametric, habituation-aware user model (**simulation, not human data**) predicts lower end-to-end compromise than confirm-all in 100 % of 243 parameter settings.
 
@@ -54,7 +54,7 @@ Combined-version experiments:
 
 All numbers are produced by the code in this repository: see `results/stats.json`, `results/tables/` and the manuscript in `paper/main.pdf`.
 
-> **What was *not* done.** No human-subject data were collected. The user study is a complete, pre-registered **protocol** with a working apparatus (`docs/user_study/`, `clear/ui/`), but it has not been run. The evaluation replays recorded trajectories. No new live LLM runs were made (no API budget or GPU was available in the research environment).
+> **What was *not* done.** No human-subject data were collected. The proposed user-study protocol (`docs/user_study/`, `clear/ui/`) has not been submitted for ethics review, preregistered, or run. The evaluation replays recorded trajectories. No new live LLM runs were made (no API budget or GPU was available in the research environment).
 
 ## Repository layout
 
@@ -94,7 +94,7 @@ figures/                    all figures (PDF + PNG) and UI screenshots
 paper/                      LaTeX manuscript (main.tex, references.bib, generated/ tables)
 docs/
   research_design.md          gap, contributions, RQs, hypotheses, architecture
-  development_log.md          pre-registration: what was changed on the development split
+  development_log.md          development and configuration-freeze log
   literature/                 structured review + reference verification log
   user_study/                 protocol, consent form, debriefing
 tests/                      57 automated tests (unit, property, laundering, label-blindness, UI, integration)

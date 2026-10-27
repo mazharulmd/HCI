@@ -1,8 +1,8 @@
-# User-study protocol (pre-registration draft)
+# Proposed user-study protocol (not preregistered)
 
-**Status: NOT YET CONDUCTED.** No participant data exist. This protocol, the
-consent form, the debriefing and the analysis plan are ready for submission to
-an Institutional Review Board / Ethics Committee. The study apparatus is
+**Status: NOT SUBMITTED OR CONDUCTED.** No participant data exist. This protocol, the
+consent form, the debriefing and the analysis plan are drafts for review by an
+Institutional Review Board / Ethics Committee before recruitment. The study apparatus is
 implemented (`clear/ui`) and was verified end-to-end with an automated
 browser test (`figures/ui_*.png`), not with people.
 
@@ -34,8 +34,8 @@ follows the recommendation of the Trust Boundary Lab iteration (see
 
 ## 4. Participants
 * **N = 220** adults (55 per cell), recruited via a crowdsourcing platform or a university pool. Fluent English. Have used e-mail and online banking. Desktop browser.
-* **Power analysis.** Each main effect compares 110 vs 110 participants. With α = .05 (two-sided) and power .80, a standardised effect of d = 0.4 on participant-level prevention rates requires 100 per factor level (statsmodels `TTestIndPower`). 55 per cell allows about 9% exclusions. The interaction is exploratory, because detecting it with equal power would need about four times the sample.
-* **Exclusion criteria (pre-registered).** Failing both attention checks; completing the 16 tasks in under 4 minutes; technical failure that prevents logging.
+* **Provisional recruitment target, not a power analysis.** N = 220 is an initial planning target. The earlier independent-samples calculation does not establish power for the proposed mixed-effects logistic primary analysis. Before recruitment, run a simulation-based power analysis using justified baseline rates, participant/scenario variance, and the final model.
+* **Proposed exclusion criteria (to preregister before recruitment).** Failing both attention checks; completing the 16 tasks in under 4 minutes; technical failure that prevents logging.
 * **Compensation** at or above the local minimum wage, prorated for an expected 35 minutes.
 
 ## 5. Materials and procedure
@@ -56,7 +56,7 @@ follows the recommendation of the Trust Boundary Lab iteration (see
 * **Primary analysis.** Mixed-effects logistic regression, `prevented ~ selective * evidence + (1|participant) + (1|scenario)`, with effect-coded factors. Main effects are tested with Holm correction over the two confirmatory tests. Odds ratios are reported with 95% CIs (Wald and parametric bootstrap).
 * **Non-inferiority (H-U4).** Two one-sided tests on the participant-level benign completion rate (margin 5 pp). TLX: Welch t-test, plus TOST with a margin of 8 TLX points.
 * **Robustness.** Including participants who failed one attention check. Excluding the first attacked task, to estimate learning.
-* All analysis code will be written against the log schema emitted by `clear/ui/server.py` before data collection and archived with the pre-registration.
+* Final analysis code will be written against the log schema emitted by `clear/ui/server.py` before data collection and archived with the preregistration.
 
 ## 8. Risks and ethics
 * **Minimal risk.** Simulated environments only; no real accounts, payments or messages. Attack texts are those of a public benchmark. The deception (unannounced attacks) is mild, necessary for ecological validity, and fully debriefed.

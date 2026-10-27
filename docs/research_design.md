@@ -29,35 +29,35 @@ Every deployed agent therefore ends up asking the **human** to resolve the
 residual ambiguity, through permission prompts and confirmation dialogs. Usable
 security has shown for two decades that such prompts fail when they are
 frequent, uninformative or habituating (Egelman 2008; Sunshine 2009; Felt
-2012; Akhawe & Felt 2013; Anderson 2015; Vance 2018, 2025). The first agent
-studies point the same way. Yan (2026, N=113) found that people approved many
-overreach actions, Salerno (2026) found that practitioners lack visibility of
-what lies behind an action, and Janus and MiniScope (2025/26) report permission
-fatigue.
+2012; Akhawe & Felt 2013; Anderson 2015; Vance 2018, 2025). Recent agent
+permission studies likewise document overreach approvals and gaps in
+reviewability (Yan 2026; Salerno et al. 2026; Michael & Roesner 2026). These
+findings motivate authorization research but do not establish the effect of
+CLEAR's interface.
 
 ## 2. Research gaps (from the systematic review, `docs/literature/systematic_review.md`)
 
 | # | Gap | Evidence |
 |---|---|---|
-| G1 | System-level defences treat the human as either absent (auto-deny) or a generic fallback ("requires approval"). What evidence the human sees, and how often they are interrupted, is unspecified and unmeasured. | CaMeL, Progent, ClawGuard, MiniScope report ASR/utility; none report interruption burden together with evidence design. |
-| G2 | HCI work on agent permissions studies over-reach, preference elicitation and fatigue, but not **adversarial provenance**: whether the action was caused by injected content, and which argument came from where. | Yan 2026; Wu et al. S&P 2026; Janus 2026; Michael et al. 2026 survey; Ge CHI EA 2026; Salerno 2026. |
-| G3 | The closest work (Su et al. 2026, Risk Cards) proposes a confirmation card with source-trust labels evaluated on AgentDojo traces. It uses a *deterministic information-exposure proxy*. It does not recompute environment outcomes, compare against system-level baselines, budget interruptions, or model habituation. | Su et al. 2026 |
-| G4 | Defence evaluations do not report **user burden** (dialogs per task), **escalation precision/recall**, or the **joint human-machine** attack success that results when a fallible human answers the dialogs. | AgentDojo-based evaluations (MELON, Task Shield, IPIGuard, Progent, ...); Khan et al. 2026 call for richer reporting. |
+| G1 | System-level defences often omit the human; Risk Cards is a direct exception with a prompt-injection confirmation UI and AgentDojo-derived evaluation. Its published abstract reports an automated oversight proxy, not participant outcomes. | CaMeL, Progent, Risk Cards and related systems; Su et al. 2026. |
+| G2 | Human studies examine agent permission, overreach, and reviewability, but the reviewed user studies do not test argument-level adversarial provenance under prompt injection. | Yan 2026; Salerno et al. 2026; Michael & Roesner 2026; Ge et al. 2026. |
+| G3 | The closest interface paper evaluates proxy information exposure; the remaining systems gap is to enforce reviewed decisions and score resulting task/security state with the benchmark's own predicates. | Risk Cards (Su et al. 2026) versus CLEAR trace replay. |
+| G4 | Neither the closest interface proxy nor CLEAR's current evaluation measures actual participant decisions. CLEAR adds interruption burden and simulated user sensitivity analysis, which remain hypotheses until human evaluation. | Su et al. 2026; this work. |
 
 ## 3. Contributions
 
-1. **Systematic review and taxonomy** of 2023-2026 prompt-injection defences by the *role of the human* (absent / pre-authorisation / runtime confirmation / audit) and the *evidence presented*.
-2. **CLEAR design patterns** (P1-P6, Sec. 5) with a formal risk model and an **escalation-floor guarantee** (Proposition 1). The guarantee is independent of attacker-controlled text.
-3. **Open implementation**: mediation engine, AgentDojo trace replayer, baselines, interactive console, user-study apparatus, and 49 automated tests.
-4. **Large-scale, environment-grounded evaluation** on real attacked trajectories of 20+ LLMs and published defences. It recomputes AgentDojo's own utility and security predicates after mediation and reports burden, ablations, a detector-evading attacker and latency, with significance tests.
-5. **Habituation-aware human-in-the-loop analysis**: a parametric SDT model that converts escalations into end-to-end risk under fallible users. It is *hypothesis-generating*. A **pre-registered user-study protocol** tests its predictions with people.
+1. **Structured rapid review and taxonomy** of 2023-2026 prompt-injection defences by the *role of the human* (absent / pre-authorisation / runtime confirmation / audit) and the *evidence presented*. Screening was single-reviewer; this is not claimed as a full PRISMA review.
+2. **CLEAR's executable mediation mechanism**: a tool manifest, intent envelope, argument lineage, decoding-aware attribution, and a conditional escalation-floor property under correct provenance attribution. This is an enforcement contribution, not the first risk-card interface.
+3. **Open implementation**: mediation engine, AgentDojo trace replayer, baselines, interactive console, proposed user-study apparatus, and automated tests.
+4. **Environment-grounded trace-replay evaluation** on recorded attacked trajectories across LLM pipelines and published defences. It recomputes AgentDojo utility and security predicates after mediation and reports burden, ablations, detector-evading scenarios, and latency. Human effects remain unmeasured.
+5. **Habituation-aware human-in-the-loop simulation**: a parametric SDT model that explores end-to-end risk under stated user-response assumptions. It is *hypothesis-generating*. A proposed study protocol is available but has not been submitted for ethics review or preregistered.
 
 ## 4. Research questions and hypotheses
 
 * **RQ1 (Security).** How much does provenance-aware, risk-adaptive mediation reduce attack success relative to undefended agents, published model/prompt-level defences, and tool-call-level baselines?
-  * *H1.* With an ideal user, CLEAR's ASR on held-out episodes is lower than the undefended agent, the task-scoped allowlist and the strict information-flow policy, and statistically indistinguishable from confirm-all.
+  * *H1.* With an ideal user, CLEAR's ASR on held-out episodes is lower than the undefended agent, the task-scoped allowlist and the strict information-flow policy, and similar to confirm-all.
 * **RQ2 (Burden & utility).** What interruption burden and utility cost does it impose?
-  * *H2.* CLEAR raises significantly fewer confirmation dialogs per benign task than confirm-all.
+  * *H2.* CLEAR reduces confirmation dialogs per benign task relative to confirm-all.
   * *H3.* In automatic mode (escalations denied), CLEAR preserves more benign utility than confirm-all-deny. With an ideal user it loses no utility.
 * **RQ3 (Mechanism).** Which components carry the effect, and does it survive an attacker who evades text-based detection?
   * *H4.* Removing argument provenance raises ASR. Removing the instruction-likeness signal does not raise ASR much (Proposition 1), whereas a lexical detector fails completely against the same attacker.
