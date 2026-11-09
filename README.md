@@ -86,6 +86,7 @@ experiments/
   offline_variants.py         exact offline evaluation of extra configurations (v2.1)
   analyze_v2.py               tables, figures and macros for E1-E3 and the audit
   analyze_user_study.py       pre-registered analysis of the lab user study (no data yet)
+  power_user_study.py         simulation-based power analysis of that analysis
 third_party/                earlier iterations' engines and benchmarks (blinded baselines)
 data/
   derived/                    compressed per-episode and per-call results (see data/README.md)
@@ -97,7 +98,7 @@ docs/
   research_design.md          gap, contributions, RQs, hypotheses, architecture
   development_log.md          development and configuration-freeze log
   literature/                 structured review + reference verification log
-  user_study/                 protocol, lab runbook, consent form, debriefing
+  user_study/                 protocol, power analysis, lab runbook, consent form, debriefing
 tests/                      62 automated tests (unit, property, laundering, label-blindness, UI, study apparatus, integration)
 scripts/                    fetch_agentdojo.sh, run_all.sh, build_paper.sh
 ```

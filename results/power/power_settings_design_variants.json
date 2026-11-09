@@ -1,0 +1,42 @@
+{
+ "n_per_cell": [
+  50,
+  100,
+  150
+ ],
+ "baseline": [
+  0.3,
+  0.5,
+  0.7
+ ],
+ "odds_ratio": [
+  1.5,
+  2.0,
+  2.5
+ ],
+ "sigma_u": [
+  0.5,
+  1.0,
+  1.5
+ ],
+ "sigma_v": 0.5,
+ "sims": 400,
+ "model_sims": 400,
+ "target": 0.8,
+ "workers": 4,
+ "seed": 20261109,
+ "skip_model": false,
+ "skip_grid": true,
+ "extra_benign": [
+  0,
+  16,
+  32
+ ],
+ "benign_source": [
+  "study",
+  "benchmark"
+ ],
+ "out": "/home/user/HCI/results/power",
+ "alpha": 0.05,
+ "exclusion_allowance": 0.1
+}
