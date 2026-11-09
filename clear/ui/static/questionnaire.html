@@ -90,9 +90,11 @@ document.getElementById("qform").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const answers = Object.fromEntries(new FormData(ev.target).entries());
   try {
-    await fetch("/api/questionnaire", { method: "POST", headers: { "Content-Type": "application/json" },
+    const r = await fetch("/api/questionnaire", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pid: PID, condition: COND, answers, t: Date.now() }) });
+    if (!r.ok) throw new Error(String(r.status));
     document.getElementById("msg").textContent = "Thank you - your answers were saved.";
+    if (params.get("study") === "1") location.href = `debrief.html?pid=${encodeURIComponent(PID)}`;
   } catch (e) {
     document.getElementById("msg").textContent = "Could not save answers; please tell the experimenter.";
   }

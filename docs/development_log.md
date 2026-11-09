@@ -99,3 +99,32 @@ held-out traffic, ideal-user ASR and dialogs per benign task are reported in
   adding them does not change the adjusted p-values of the v1 ablations.
 * **Reproduction check.** The v2 re-run reproduced all 90,248 per-call v1 tiers
   and risks exactly. The only differences are runtime and latency measurements.
+
+### Lab study apparatus and analysis plan (before any data collection)
+
+No participant data exist at the time of these changes.
+
+* **Apparatus.** The study now runs entirely in the browser for a laboratory
+  setting: start page (experimenter enters the participant code), consent,
+  demographics, introduction, two practice tasks, the 16 tasks with two
+  instructed-response attention checks, questionnaire and debriefing. The server
+  assigns conditions by stratified (programming experience) permuted-block
+  randomisation with mixed blocks of 4 and 8. The allocation is generated from a
+  random seed at first use and never served. The console hides the condition, so
+  the experimenter stays blind.
+* **Practice tasks.** Two additional GPT-4o trajectories (one benign, one
+  attacked) are selected after the main 16, so the main selection is unchanged.
+* **Deterministic previews.** Consequence previews previously showed the build
+  machine's clock and listed invitees in hash-dependent order, so two builds
+  could differ. Clock values are now shown as "now" and name lists are sorted
+  and shown in full. The tool calls, tiers and provenance of the 16 scenarios
+  are unchanged; only preview text changed.
+* **Analysis plan.** The draft plan specified a mixed logistic model with a
+  scenario random intercept. With only four attacked scenarios, that variance
+  is poorly identified, so the plan now uses a logistic GEE clustered by
+  participant, with scenario as a fixed effect, plus a stratified permutation
+  test that remains valid under separation. The robustness analyses were
+  reworded to be implementable (the original wording "including participants
+  who failed one attention check" described the primary analysis set). The
+  hypothesis label H-U4 was corrected to H-U3. The script
+  (`experiments/analyze_user_study.py`) was tested on synthetic logs only.

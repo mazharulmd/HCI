@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Start</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar"><div class="brand">CLEAR <span class="muted">study &ndash; experimenter</span></div></header>
+<main class="page">
+  <h1>Start a participant session</h1>
+  <div id="placeholders" class="warn" hidden></div>
+  <section>
+    <p>Enter the participant code from the session sheet (letters, digits, <code>-</code> or <code>_</code>; at most 32 characters). Then hand the computer to the participant.</p>
+    <form id="f">
+      <label for="pid">Participant code</label>
+      <input type="text" id="pid" autocomplete="off" required pattern="[A-Za-z0-9_\-]{1,32}">
+      <div class="actions"><button class="primary" type="submit">Begin session</button></div>
+    </form>
+    <p id="msg" class="note"></p>
+  </section>
+</main>
+<script src="study_config.js"></script>
+<script src="study.js"></script>
+<script>
+"use strict";
+const miss = STUDY.placeholders();
+if (miss.length) {
+  const w = document.getElementById("placeholders");
+  w.textContent = `Not ready for participants: fill in ${miss.join(", ")} in study_config.js.`;
+  w.hidden = false;
+}
+document.getElementById("f").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const pid = document.getElementById("pid").value.trim();
+  if (!/^[A-Za-z0-9_-]{1,32}$/.test(pid)) return STUDY.fail("That code is not valid.");
+  location.href = `consent.html?pid=${encodeURIComponent(pid)}`;
+});
+</script>
+</body>
+</html>

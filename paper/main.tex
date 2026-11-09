@@ -180,7 +180,7 @@ rejected goal drift, and audited the earlier evidence (\cref{sec:lessons}).
   (\cref{prop:launder}) (\cref{sec:framework}).
 \item An open implementation. It comprises the mediator, an AgentDojo-compatible
   replayer, baselines (including two alternative HCI defence engines), an
-  instrumented console that doubles as a study apparatus, and 57 automated
+  instrumented console that doubles as a study apparatus, and 62 automated
   tests.
 \item The, to our knowledge, largest environment-grounded evaluation of a
   human-in-the-loop prompt-injection defence. It covers \nEpisodes{} real
@@ -597,7 +597,7 @@ never as HTML. Envelope edits re-score calls client-side with the same model.
 recorded or live messages through it. The console is a standard-library HTTP
 server with a vanilla-JavaScript client and supports the four conditions of a
 $2{\times}2$ factorial study plus a no-mediation arm (\cref{sec:study}). Configuration, the tool manifest and every design decision
-made on development data are versioned. The test suite (57 tests) includes a
+made on development data are versioned. The test suite (62 tests) includes a
 randomised property test of \cref{prop:floor}, laundering tests for
 \cref{prop:launder}, a label-blindness test for the baseline engines, end-to-end mediation, UI logging
 and input validation, a check that participant payloads do not leak
@@ -1056,24 +1056,35 @@ excerpt, preview and forcing). The four cells are full \clear{} (A),
 confirm-all (B), \clear{} selectivity only (C) and confirm-all with evidence
 (D). This design separates the two levers that the simulation predicts to
 compound (\cref{fig:human}), and it implements a factorial design recommended
-in an earlier iteration of this project. Each participant supervises 16 real GPT-4o trajectories, 4 of which contain a
-successful injection. Order is counterbalanced, and attention checks are
-embedded. Every escalated action carries the computed consequence preview
+in an earlier iteration of this project. The study runs in a laboratory. Participants are assigned by the server, with
+permuted-block randomisation stratified by programming experience; the
+allocation is concealed and the experimenter is blind to condition. After
+consent, a demographics form and two practice tasks, each participant
+supervises 16 real GPT-4o trajectories, 4 of which contain a successful
+injection. Order is counterbalanced, and two instructed-response attention
+checks are embedded. Every escalated action carries the computed consequence preview
 (P7). \textbf{Primary outcomes}: prevention of injected actions and completion
 of benign tasks, per task. \textbf{Secondary outcomes}: per-dialog
 accuracy, SDT $d'$ and $c$, decision time, SUS~\citep{brooke1996sus}, raw
 NASA-TLX~\citep{hart1988nasatlx}, and trust in automation~\citep{jian2000trust}.
-\textbf{Analysis}: a mixed-effects logistic regression
-(\texttt{prevented $\sim$ selective $\times$ evidence + (1|participant) +
-(1|scenario)}) testing the two main effects with Holm correction, and
-non-inferiority tests for benign completion and workload (A vs.\ B).
+\textbf{Analysis}: a logistic GEE clustered by participant
+(\texttt{prevented $\sim$ selective $\times$ evidence + scenario}), testing the
+two main effects with Holm correction. With only four attacked scenarios, a
+scenario random effect would be poorly identified, so scenario enters as a
+fixed effect. A stratified permutation test of the main effects on
+participant-level prevention rates serves as a robustness check that remains
+valid under separation. Non-inferiority tests cover benign completion and
+workload (A vs.\ B). The analysis script was written before data collection
+and tested on synthetic logs only.
 \textbf{Power}: each main effect compares 110 against 110 participants. This
 detects $d=0.4$ at $\alpha=.05$ with power .80 (100 needed per level). We plan
 55 per cell ($N=220$). The interaction is exploratory.
-The apparatus logs every decision, response time, forcing answer, envelope edit
-and undo. It was verified with an automated browser run of all 16 scenarios in
-each of the five conditions: \clear{} and its generic variant raised 13
-dialogs, and both confirm-all variants raised 18, with no client errors.
+The apparatus covers the whole session in the browser (consent, demographics,
+practice, tasks, attention checks, questionnaire and debriefing) and logs every
+decision, response time, forcing answer, envelope edit and undo. It was
+verified with automated (not human) browser sessions through the full flow: in
+the 16 tasks, \clear{} and its generic variant raised 13 dialogs, and both
+confirm-all variants raised 18, with no client errors.
 
 % =========================================================================
 \section{Lessons from three design iterations}

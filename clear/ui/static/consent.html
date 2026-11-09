@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Participant Information</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar"><div class="brand">Study <span class="muted">participant information and consent</span></div></header>
+<main class="page">
+  <h1 data-cfg="title"></h1>
+  <section>
+    <p><strong>Principal investigator:</strong> <span data-cfg="pi"></span> (<span data-cfg="pi_email"></span>)<br>
+       <strong>Ethics approval:</strong> <span data-cfg="ethics_ref"></span></p>
+  </section>
+  <section>
+    <h2>What is this study about?</h2>
+    <p>AI assistants ("agents") can read e-mails, documents and web pages and then act on your behalf, for example by sending messages or payments. We are studying how the interface of such an assistant can help people decide which actions should be allowed.</p>
+    <h2>What will I do?</h2>
+    <p>You will watch an AI assistant work on short everyday tasks in a <strong>simulated</strong> e-mail, calendar, cloud-drive, travel and banking environment: two practice tasks, then 16 tasks. Sometimes the assistant will ask for your approval before it acts. Some tasks may include problems that you should catch. Afterwards you will answer a short questionnaire about your experience. The study takes about <span data-cfg="minutes"></span> minutes.</p>
+    <h2>Are there risks?</h2>
+    <p>No real accounts, money or messages are involved. Everything happens in a simulation. You may find some tasks tedious. You can stop at any time.</p>
+    <h2>What data are collected?</h2>
+    <ul>
+      <li>Your decisions in the interface and how long they took.</li>
+      <li>Your questionnaire answers.</li>
+      <li>Basic demographics (age range, gender, programming experience).</li>
+    </ul>
+    <p>We do not collect your name, e-mail address or IP address in the study application. Data are linked only to a participant code and are stored on secure institutional storage for <span data-cfg="retention_years"></span> years. Anonymised data may be shared with other researchers for replication.</p>
+    <h2>Compensation</h2>
+    <p data-cfg="compensation"></p>
+    <h2>Voluntary participation</h2>
+    <p>Participation is voluntary. You can withdraw at any time without giving a reason and without penalty. You can ask for your data to be deleted until <span data-cfg="withdraw_until"></span>, when the data are anonymised.</p>
+    <h2>Contact</h2>
+    <p>Questions: <span data-cfg="pi_email"></span>. Concerns about your rights as a participant: <span data-cfg="ethics_contact"></span>.</p>
+  </section>
+  <form id="f">
+    <fieldset>
+      <legend>Consent</legend>
+      <label><input type="checkbox" required> I have read and understood the information above.</label>
+      <label><input type="checkbox" required> I am 18 years or older.</label>
+      <label><input type="checkbox" required> I agree to take part in this study.</label>
+    </fieldset>
+    <div class="actions">
+      <button type="button" id="decline">I do not want to take part</button>
+      <button class="primary" type="submit">I agree &ndash; continue</button>
+    </div>
+    <p id="msg" class="note"></p>
+  </form>
+</main>
+<script src="study_config.js"></script>
+<script src="study.js"></script>
+<script>
+"use strict";
+STUDY.fillConfig();
+if (!STUDY.pid) STUDY.fail("Missing participant code. Please call the experimenter.");
+document.getElementById("f").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  try {
+    await STUDY.log({ type: "consent", agreed: true });
+    location.href = `demographics.html?pid=${encodeURIComponent(STUDY.pid)}`;
+  } catch (e) { STUDY.fail("Could not save. Please call the experimenter."); }
+});
+document.getElementById("decline").addEventListener("click", async () => {
+  try { await STUDY.log({ type: "consent", agreed: false }); } catch (e) { /* nothing is recorded beyond this */ }
+  document.querySelector("main").replaceChildren(Object.assign(document.createElement("section"), {
+    textContent: "Thank you. You have not taken part, and no data from you will be used. Please tell the experimenter." }));
+});
+</script>
+</body>
+</html>

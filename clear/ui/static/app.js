@@ -12,6 +12,14 @@ const EVIDENCE = COND === "clear" || COND === "confirm_all_evidence";
 const ASK_ALL = COND === "confirm_all" || COND === "confirm_all_evidence";
 const PID = /^[A-Za-z0-9_-]{1,32}$/.test(params.get("pid") || "") ? params.get("pid") : "demo";
 const STEP_DELAY = Number(params.get("delay") || 450);
+// Study mode (reached from start.html): intro, two practice tasks, then the 16 tasks with two
+// attention checks. Without it the console runs the 16 tasks directly (demo mode).
+const STUDY_MODE = params.get("study") === "1";
+const ATTENTION_AFTER = { 5: "AC1", 11: "AC2" };   // after the 5th and the 11th task
+const ATTENTION = {
+  AC1: { amount: "25.00", correct: "deny" },
+  AC2: { amount: "10.00", correct: "approve" },
+};
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => {
@@ -22,7 +30,7 @@ const el = (tag, cls, text) => {
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-let DATA = null, CFG = null, order = [], pos = 0, scenario = null, caps = new Set();
+let DATA = null, CFG = null, queue = [], pos = 0, item = null, scenario = null, caps = new Set();
 
 const CAP_LABEL = {
   communicate: "send messages / e-mail / share", financial: "move money", calendar_write: "change calendar",
@@ -35,7 +43,8 @@ const ORIGIN_LABEL = {
 };
 
 function log(event) {
-  const body = JSON.stringify({ pid: PID, condition: COND, scenario: scenario && scenario.id, t: Date.now(), ...event });
+  const body = JSON.stringify({ pid: PID, condition: COND, scenario: scenario && scenario.id,
+                               phase: item && item.phase, t: Date.now(), ...event });
   fetch("/api/log", { method: "POST", headers: { "Content-Type": "application/json" }, body }).catch(() => {});
 }
 
@@ -44,28 +53,94 @@ function hashPid(s) { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0
 async function init() {
   document.documentElement.dataset.theme = params.get("theme") || "";
   $("condition-badge").textContent = { clear: "Condition A", confirm_all: "Condition B", clear_generic: "Condition C", confirm_all_evidence: "Condition D", none: "Condition E" }[COND];
+  $("condition-badge").hidden = STUDY_MODE;   // keep the experimenter blind to the assigned condition
   DATA = await (await fetch("scenarios.json")).json();
   CFG = DATA.config;
   const n = DATA.scenarios.length;
   const off = hashPid(PID) % n;          // rotation for counterbalancing scenario order
-  order = Array.from({ length: n }, (_, i) => (i + off) % n);
+  const main = Array.from({ length: n }, (_, i) => ({ kind: "task", phase: "main", sc: DATA.scenarios[(i + off) % n],
+                                                     label: `Task ${i + 1} of ${n}` }));
+  if (STUDY_MODE) {
+    const practice = DATA.practice || [];
+    queue.push({ kind: "intro", phase: "intro" });
+    practice.forEach((sc, i) => queue.push({ kind: "task", phase: "practice", sc, label: `Practice ${i + 1} of ${practice.length}` }));
+    queue.push({ kind: "break", phase: "intro" });
+    main.forEach((t, i) => {
+      queue.push(t);
+      if (ATTENTION_AFTER[i + 1]) queue.push({ kind: "attention", phase: "main", id: ATTENTION_AFTER[i + 1], label: t.label });
+    });
+  } else {
+    queue = main;
+  }
   $("start").addEventListener("click", run);
   $("next").addEventListener("click", () => { pos += 1; load(); });
   load();
 }
 
 function load() {
-  if (pos >= order.length) return finish();
-  scenario = DATA.scenarios[order[pos]];
-  $("progress").textContent = `Task ${pos + 1} of ${order.length}`;
-  $("prompt").textContent = scenario.prompt;
+  if (pos >= queue.length) return finish();
+  item = queue[pos];
+  scenario = item.kind === "task" ? item.sc : null;
   $("steps").replaceChildren();
   $("audit").replaceChildren();
   $("done").hidden = true;
+  if (item.kind !== "task") return interstitial(item);
+  $("progress").textContent = item.label;
+  $("prompt").textContent = scenario.prompt;
+  $("start").hidden = false;
   $("start").disabled = false;
   caps = new Set(scenario.envelope.capabilities);
   renderEnvelope();
   log({ type: "scenario_start" });
+}
+
+// Screens between tasks: study intro, end of practice, and attention checks.
+function interstitial(it) {
+  $("envelope").hidden = true;
+  $("start").hidden = true;
+  const card = el("li", "card");
+  const next = (label, onClick) => {
+    const b = el("button", "primary", label);
+    b.addEventListener("click", onClick);
+    return b;
+  };
+  const advance = () => { pos += 1; load(); };
+  if (it.kind === "intro") {
+    $("progress").textContent = "Introduction";
+    $("prompt").textContent = "Welcome";
+    card.append(el("p", "", "You will supervise an AI assistant that carries out everyday tasks for you in a simulated " +
+                            "e-mail, calendar, cloud-drive, travel and banking account."),
+                el("p", "", "For each task, read your request on the left and press \u201cStart agent\u201d. Watch what the " +
+                            "assistant does. When it asks for your approval, decide whether the action should go ahead."),
+                el("p", "", "You start with two practice tasks. They are not scored."),
+                next("Start the practice", advance));
+    log({ type: "intro_shown" });
+  } else if (it.kind === "break") {
+    $("progress").textContent = "Practice finished";
+    $("prompt").textContent = "The real tasks start now";
+    card.append(el("p", "", `The practice is over. Next come ${DATA.scenarios.length} tasks. From now on, your decisions are recorded.`),
+                el("p", "", "If anything is unclear, ask the experimenter now."),
+                next("Start the tasks", advance));
+  } else if (it.kind === "attention") {
+    const ac = ATTENTION[it.id];
+    $("progress").textContent = it.label;
+    $("prompt").textContent = "Quick check";
+    card.append(el("p", "", "Your assistant proposes this action:"),
+                el("div", "proposal", `Send ${ac.amount} to account DE89 3704 0044 0532 0130 00`),
+                el("p", "", "Approve this action only if the amount is exactly 10.00."));
+    const t0 = performance.now();
+    const answer = (response) => () => {
+      log({ type: "attention_check", check: it.id, response, correct: response === ac.correct,
+            rt_ms: Math.round(performance.now() - t0) });
+      advance();
+    };
+    const row = el("div", "actions");
+    const deny = el("button", "secondary", "Deny");
+    deny.addEventListener("click", answer("deny"));
+    row.append(deny, next("Approve", answer("approve")));
+    card.append(row);
+  }
+  $("steps").append(card);
 }
 
 function renderEnvelope() {
@@ -356,7 +431,8 @@ function finish() {
   $("start").hidden = true;
   $("steps").replaceChildren();
   const a = el("a", "", "Open questionnaire");
-  a.href = `questionnaire.html?pid=${encodeURIComponent(PID)}&condition=${encodeURIComponent(COND)}`;
+  item = null;
+  a.href = `questionnaire.html?pid=${encodeURIComponent(PID)}&condition=${encodeURIComponent(COND)}${STUDY_MODE ? "&study=1" : ""}`;
   $("steps").append(a);
   log({ type: "session_end" });
 }

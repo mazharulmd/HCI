@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About You</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar"><div class="brand">Study <span class="muted">about you</span></div></header>
+<main class="page">
+  <h1>A few questions about you</h1>
+  <form id="f">
+    <fieldset>
+      <legend>Age</legend>
+      <label><input type="radio" name="age" value="18-24" required> 18&ndash;24</label>
+      <label><input type="radio" name="age" value="25-34"> 25&ndash;34</label>
+      <label><input type="radio" name="age" value="35-44"> 35&ndash;44</label>
+      <label><input type="radio" name="age" value="45-54"> 45&ndash;54</label>
+      <label><input type="radio" name="age" value="55+"> 55 or older</label>
+      <label><input type="radio" name="age" value="no_answer"> Prefer not to say</label>
+    </fieldset>
+    <fieldset>
+      <legend>Gender</legend>
+      <label><input type="radio" name="gender" value="woman" required> Woman</label>
+      <label><input type="radio" name="gender" value="man"> Man</label>
+      <label><input type="radio" name="gender" value="non_binary"> Non-binary</label>
+      <label><input type="radio" name="gender" value="self_describe"> Prefer to self-describe: <input type="text" name="gender_text" maxlength="60"></label>
+      <label><input type="radio" name="gender" value="no_answer"> Prefer not to say</label>
+    </fieldset>
+    <fieldset>
+      <legend>How much programming experience do you have?</legend>
+      <label><input type="radio" name="programming" value="none" required> None</label>
+      <label><input type="radio" name="programming" value="little"> A little (for example one course or some tutorials)</label>
+      <label><input type="radio" name="programming" value="regular"> I program regularly (study or hobby)</label>
+      <label><input type="radio" name="programming" value="professional"> I program professionally</label>
+    </fieldset>
+    <fieldset>
+      <legend>Have you had any training in computer security?</legend>
+      <label><input type="radio" name="security_training" value="yes" required> Yes</label>
+      <label><input type="radio" name="security_training" value="no"> No</label>
+    </fieldset>
+    <fieldset>
+      <legend>How often do you use AI assistants such as ChatGPT, Gemini or Claude?</legend>
+      <label><input type="radio" name="ai_use" value="never" required> Never</label>
+      <label><input type="radio" name="ai_use" value="monthly"> A few times a month or less</label>
+      <label><input type="radio" name="ai_use" value="weekly"> Every week</label>
+      <label><input type="radio" name="ai_use" value="daily"> Every day</label>
+    </fieldset>
+    <fieldset>
+      <legend>Do you use e-mail and online banking?</legend>
+      <label><input type="radio" name="email_banking" value="both" required> Both</label>
+      <label><input type="radio" name="email_banking" value="email_only"> E-mail only</label>
+      <label><input type="radio" name="email_banking" value="neither"> Neither</label>
+    </fieldset>
+    <div class="actions"><button class="primary" type="submit">Continue</button></div>
+    <p id="msg" class="note"></p>
+  </form>
+</main>
+<script src="study_config.js"></script>
+<script src="study.js"></script>
+<script>
+"use strict";
+if (!STUDY.pid) STUDY.fail("Missing participant code. Please call the experimenter.");
+document.getElementById("f").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const answers = Object.fromEntries(new FormData(ev.target).entries());
+  // randomisation stratum: programming experience (protocol section 3)
+  const stratum = ["regular", "professional"].includes(answers.programming) ? "high" : "low";
+  try {
+    await STUDY.log({ type: "demographics", answers });
+    const res = await STUDY.post("/api/assign", { stratum });
+    location.href = `index.html?pid=${encodeURIComponent(STUDY.pid)}&condition=${encodeURIComponent(res.condition)}&study=1`;
+  } catch (e) { STUDY.fail("Could not save. Please call the experimenter."); }
+});
+</script>
+</body>
+</html>

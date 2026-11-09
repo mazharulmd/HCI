@@ -85,6 +85,7 @@ experiments/
   cross_benchmark.py          E2 stress test vs. PROV-Guard and Trust-Boundary engines
   offline_variants.py         exact offline evaluation of extra configurations (v2.1)
   analyze_v2.py               tables, figures and macros for E1-E3 and the audit
+  analyze_user_study.py       pre-registered analysis of the lab user study (no data yet)
 third_party/                earlier iterations' engines and benchmarks (blinded baselines)
 data/
   derived/                    compressed per-episode and per-call results (see data/README.md)
@@ -96,8 +97,8 @@ docs/
   research_design.md          gap, contributions, RQs, hypotheses, architecture
   development_log.md          pre-registration: what was changed on the development split
   literature/                 structured review + reference verification log
-  user_study/                 protocol, consent form, debriefing
-tests/                      57 automated tests (unit, property, laundering, label-blindness, UI, integration)
+  user_study/                 protocol, lab runbook, consent form, debriefing
+tests/                      62 automated tests (unit, property, laundering, label-blindness, UI, study apparatus, integration)
 scripts/                    fetch_agentdojo.sh, run_all.sh, build_paper.sh
 ```
 
@@ -108,7 +109,7 @@ Requires Python ≥ 3.10.
 ```bash
 git clone https://github.com/mazharulmd/HCI.git && cd HCI
 python -m pip install -r requirements.txt     # agentdojo==0.1.35, numpy, pandas, scipy, statsmodels, matplotlib, pytest
-python -m pytest -q                           # 57 tests (the integration tests skip if traces are absent)
+python -m pytest -q                           # 62 tests (the integration tests skip if traces are absent)
 ```
 
 LaTeX (for the paper): `texlive-latex-extra`, `texlive-science`, `latexmk`.
@@ -146,12 +147,22 @@ for call in agent_loop():                    # each proposed tool call, before e
 
 ## Interactive console / user-study apparatus
 
+**Try it (demo):**
 ```bash
 python -m clear.ui.server --port 8765
 # open http://127.0.0.1:8765/?condition=clear&pid=P001
 # conditions (2x2 selectivity x evidence): clear | clear_generic | confirm_all_evidence | confirm_all ; plus none
 ```
-Decisions, response times, forcing answers, envelope edits and undo events are logged to `user_study_logs/<pid>.jsonl`. The post-task questionnaire (SUS, NASA-TLX raw, trust in automation) is at `questionnaire.html`.
+
+**Run the lab study:** see [`docs/user_study/lab_runbook.md`](docs/user_study/lab_runbook.md). In short:
+1. Fill in `clear/ui/static/study_config.js` (PI, ethics reference, compensation).
+2. Start the server on the experimenter's computer: `python -m clear.ui.server --host 0.0.0.0 --port 8765`.
+3. Open `http://<server-address>:8765/start.html` on each lab computer and enter the participant code.
+
+The browser then walks the participant through consent, demographics, two practice tasks, the 16 tasks with two attention checks, the questionnaire (SUS, NASA-TLX raw, trust in automation) and the debriefing. The server assigns conditions by stratified permuted-block randomisation, with the allocation concealed, and logs every decision, response time, forcing answer, envelope edit and undo to `user_study_logs/`. After data collection:
+```bash
+python experiments/analyze_user_study.py --logs user_study_logs --out results/user_study
+```
 
 ## Citing
 

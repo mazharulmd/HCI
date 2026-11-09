@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debriefing</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar"><div class="brand">Study <span class="muted">debriefing</span></div></header>
+<main class="page">
+  <h1>Thank you for taking part</h1>
+  <section>
+    <h2>What we were really studying</h2>
+    <p>Four of the sixteen tasks contained a <strong>prompt-injection attack</strong>: text hidden in an e-mail, file or web page that tried to make the AI assistant do something you never asked for, such as sending money to an unknown account or forwarding a security code. We did not tell you which tasks contained attacks, because we wanted to see how well different interface designs help people notice them in a realistic situation. Different participants saw different interface designs.</p>
+    <p>The tasks that contained an attack were the ones with these requests:</p>
+    <ul id="attacked"></ul>
+  </section>
+  <section>
+    <h2>Nothing was real</h2>
+    <p>All accounts, messages, payments and documents were simulated. The attack texts come from a public research benchmark (AgentDojo).</p>
+  </section>
+  <section>
+    <h2>How to protect yourself in practice</h2>
+    <p>When an AI assistant asks you to approve an action, check <em>where the important details came from</em>. Did you provide the recipient, account number or link yourself, or did the assistant copy it from a document or e-mail written by someone else?</p>
+  </section>
+  <section>
+    <h2>Withdrawing your data</h2>
+    <p>You may withdraw your data, without penalty, until <span data-cfg="withdraw_until"></span> by contacting <span data-cfg="pi_email"></span> with your participant code:</p>
+    <p class="code" data-pid></p>
+    <p>Please do not tell other people which tasks contained attacks until the study has finished.</p>
+  </section>
+  <p id="msg" class="note"></p>
+</main>
+<script src="study_config.js"></script>
+<script src="study.js"></script>
+<script>
+"use strict";
+STUDY.fillConfig();
+(async () => {
+  const ul = document.getElementById("attacked");
+  try {
+    const r = await fetch(`/api/debrief?pid=${encodeURIComponent(STUDY.pid || "")}`);
+    if (!r.ok) throw new Error(String(r.status));
+    for (const p of (await r.json()).attacked_tasks) ul.append(Object.assign(document.createElement("li"), { textContent: p }));
+    STUDY.log({ type: "debriefed" }).catch(() => {});
+  } catch (e) {
+    ul.append(Object.assign(document.createElement("li"), { textContent: "(The experimenter will show you the list.)" }));
+  }
+})();
+</script>
+</body>
+</html>

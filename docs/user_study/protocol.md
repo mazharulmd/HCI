@@ -3,8 +3,9 @@
 **Status: NOT YET CONDUCTED.** No participant data exist. This protocol, the
 consent form, the debriefing and the analysis plan are ready for submission to
 an Institutional Review Board / Ethics Committee. The study apparatus is
-implemented (`clear/ui`) and was verified end-to-end with an automated
-browser test (`figures/ui_*.png`), not with people.
+implemented (`clear/ui`) for a **laboratory** study and was verified end-to-end
+with automated browser sessions, not with people. How to run a session is
+described in `lab_runbook.md`.
 
 ## 1. Title
 Do provenance-aware, risk-adaptive confirmations help people stop prompt-injected AI-agent actions?
@@ -26,25 +27,26 @@ follows the recommendation of the Trust Boundary Lab iteration (see
 | **ask about every side-effecting action** | B `confirm_all` | D `confirm_all_evidence` |
 | **ask only about CLEAR escalations** | C `clear_generic` | A `clear` (full CLEAR) |
 
-  Random assignment is stratified by self-reported programming experience. A fifth, no-mediation arm (`none`) is optional and is used only for describing the baseline.
+  **Assignment.** The server assigns each participant when the demographics form is submitted. Randomisation is stratified by self-reported programming experience: *low* (none, a little) vs *high* (regular, professional). Within each stratum, permuted blocks of 4 or 8 (chosen at random) contain every condition equally often. The sequence is generated once, from a random seed, at first use and stored in `user_study_logs/allocation.json`, which is never served to browsers (allocation concealment). The study console does not display the condition, so the experimenter stays blind. A returning participant code keeps its condition. A fifth, no-mediation arm (`none`) exists for demonstrations only and is never assigned.
 * A between-subjects design avoids carry-over: once a participant has seen one attack, they are primed for the rest.
-* Each participant supervises **16 recorded agent tasks**: 12 benign and 4 containing a successful prompt injection. All are real AgentDojo trajectories of GPT-4o (`clear/ui/static/scenarios.json`); the answer key is kept separately in `data/ui_answer_key.json`. Every escalated action carries a *consequence preview* computed by executing it on a copy of the environment.
+* Each participant supervises **16 recorded agent tasks**: 12 benign and 4 containing a successful prompt injection. All are real AgentDojo trajectories of GPT-4o (`clear/ui/static/scenarios.json`); the answer key is kept separately in `data/ui_answer_key.json`. Every escalated action carries a *consequence preview* computed by executing it on a copy of the environment. Two further trajectories (one benign, one attacked, not among the 16) serve as practice tasks and are never scored.
 * Scenario order is rotated per participant (Latin-square rotation in `app.js`).
 * The prevalence of attacks (25%) is higher than realistic. This is stated as a limitation, and an exploratory follow-up with 1/16 prevalence is planned.
 
 ## 4. Participants
-* **N = 220** adults (55 per cell), recruited via a crowdsourcing platform or a university pool. Fluent English. Have used e-mail and online banking. Desktop browser.
+* **N = 220** adults (55 per cell), recruited from the university participant pool and by notices on campus. Fluent English. Have used e-mail and online banking. Sessions take place in a computer laboratory; several participants can take part at once on separate computers.
 * **Power analysis.** Each main effect compares 110 vs 110 participants. With α = .05 (two-sided) and power .80, a standardised effect of d = 0.4 on participant-level prevention rates requires 100 per factor level (statsmodels `TTestIndPower`). 55 per cell allows about 9% exclusions. The interaction is exploratory, because detecting it with equal power would need about four times the sample.
-* **Exclusion criteria (pre-registered).** Failing both attention checks; completing the 16 tasks in under 4 minutes; technical failure that prevents logging.
+* **Exclusion criteria (pre-registered).** Failing both attention checks; completing the 16 tasks in under 4 minutes; technical failure that prevents logging (fewer than 16 tasks logged); the condition shown in the browser differs from the server's assignment. Pilot sessions use participant codes starting with `PILOT` and are never analysed.
 * **Compensation** at or above the local minimum wage, prorated for an expected 35 minutes.
 
 ## 5. Materials and procedure
-1. Information sheet and consent (`consent_form.md`). The deception element is disclosed in general terms: "some tasks may include problems you should catch".
-2. Demographics and a short security-behaviour questionnaire (SeBIS is optional, pending licence check).
-3. Training: two practice tasks (one benign, one with an obvious injection) using the participant's condition interface.
-4. The 16 tasks. The participant reads the request, (A only) may edit the intent envelope, starts the agent and answers every dialog. Attention checks are embedded in two benign tasks ("approve this action only if the amount is 10.00").
-5. Post-task questionnaire (`clear/ui/static/questionnaire.html`): SUS (Brooke 1996), NASA-TLX raw (Hart & Staveland 1988), the trust-in-automation scale (Jian et al. 2000) and two open questions.
-6. Debriefing (`debriefing.md`): what prompt injection is, which tasks contained attacks, and that no real money or e-mail was involved.
+Every step runs in the browser; the experimenter only enters the participant code on `start.html`.
+1. Information sheet and consent (`consent.html`, text of `consent_form.md`). The deception element is disclosed in general terms: "some tasks may include problems you should catch". A participant who declines leaves without any further data being recorded.
+2. Demographics (`demographics.html`): age range, gender, programming experience (the randomisation stratum), security training, use of AI assistants, use of e-mail and online banking. Submitting it triggers the assignment.
+3. Introduction and two practice tasks (one benign, one with an injection) in the participant's own condition interface. They are not scored.
+4. The 16 tasks. The participant reads the request, (A only) may edit the intent envelope, starts the agent and answers every dialog. Two instructed-response attention checks follow tasks 5 and 11. Each shows a proposed payment with the instruction "Approve this action only if the amount is exactly 10.00": the first shows 25.00 (correct: deny), the second 10.00 (correct: approve).
+5. Post-task questionnaire (`questionnaire.html`): SUS (Brooke 1996), NASA-TLX raw (Hart & Staveland 1988), the trust-in-automation scale (Jian et al. 2000) and two open questions.
+6. Debriefing (`debrief.html`, text of `debriefing.md`): what prompt injection is, which tasks contained attacks, and that no real money or e-mail was involved. The list of attacked tasks is released by the server only after this participant's questionnaire has been saved.
 
 ## 6. Measures
 * **Primary.**
@@ -53,10 +55,12 @@ follows the recommendation of the Trust Boundary Lab iteration (see
 * **Secondary.** Per-dialog decision correctness; d' and c computed per participant with a log-linear correction; median decision time; number of dialogs; SUS; TLX; trust.
 
 ## 7. Analysis plan
-* **Primary analysis.** Mixed-effects logistic regression, `prevented ~ selective * evidence + (1|participant) + (1|scenario)`, with effect-coded factors. Main effects are tested with Holm correction over the two confirmatory tests. Odds ratios are reported with 95% CIs (Wald and parametric bootstrap).
-* **Non-inferiority (H-U4).** Two one-sided tests on the participant-level benign completion rate (margin 5 pp). TLX: Welch t-test, plus TOST with a margin of 8 TLX points.
-* **Robustness.** Including participants who failed one attention check. Excluding the first attacked task, to estimate learning.
-* All analysis code will be written against the log schema emitted by `clear/ui/server.py` before data collection and archived with the pre-registration.
+The complete analysis is implemented in `experiments/analyze_user_study.py`. It was written before any data were collected and has been run only on synthetic logs, in the automated tests.
+* **Primary analysis (H-U1, H-U2).** Logistic regression estimated by generalised estimating equations (GEE) with an exchangeable working correlation and participants as clusters: `prevented ~ selective * evidence + C(scenario)`, with factors effect-coded as ±0.5, so that exp(β) is the odds ratio between factor levels. Wald 95% CIs with robust standard errors. Holm correction over the two main effects. *Why not a mixed model with a scenario random effect:* with four attacked scenarios, a scenario variance is poorly identified, so scenario enters as a fixed effect; GEE also gives population-averaged odds ratios with robust standard errors.
+* **Robustness for the primary analysis.** A permutation test (10,000 permutations, labels permuted within randomisation strata) of each main effect on participant-level prevention rates, Holm-corrected. It stays valid when a condition prevents every attack, where the GEE is not estimable (separation).
+* **Non-inferiority (H-U3).** Full CLEAR (A) vs confirm-all (B), on participant-level means with Welch standard errors. Benign completion: non-inferior if the lower bound of the 90% CI of A − B is above −5 percentage points. NASA-TLX: non-inferior if the upper bound of the 90% CI of A − B is below +8 points.
+* **Secondary and exploratory.** Per-condition descriptives of dialogs, dialog accuracy, d′ and c (log-linear correction), median decision time, SUS, TLX, trust, forcing-question accuracy, envelope edits and undo use; the selectivity × evidence interaction.
+* **Robustness.** The primary GEE repeated (i) excluding participants who failed either attention check, and (ii) excluding each participant's first attacked task in presentation order, to gauge learning.
 
 ## 8. Risks and ethics
 * **Minimal risk.** Simulated environments only; no real accounts, payments or messages. Attack texts are those of a public benchmark. The deception (unannounced attacks) is mild, necessary for ecological validity, and fully debriefed.

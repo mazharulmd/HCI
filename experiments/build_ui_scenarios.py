@@ -11,6 +11,9 @@ Selection is deterministic (seeded) and restricted to the held-out suites
   * benign scenarios: benign runs that contain >= 1 side-effecting call
   * attacked scenarios: important_instructions runs in which the agent
     actually executed the injected action (AgentDojo security == True)
+  * practice scenarios (--n-practice): one benign and one attacked run, drawn
+    after the main selection so that the main scenarios are unchanged; they
+    are written under "practice" and are never scored
 """
 from __future__ import annotations
 
@@ -35,8 +38,20 @@ from experiments.traces import DEFAULT_RUNS, Replayer, iter_episodes  # noqa: E4
 ROOT = Path(__file__).resolve().parent.parent
 
 
+_TODAY = __import__("datetime").date.today().isoformat()
+
+
+def _stable(v):
+    """Make preview text identical across builds: environment clocks show 'now', unordered lists are sorted."""
+    if isinstance(v, str) and v.startswith(_TODAY + "T"):
+        return "now"
+    if isinstance(v, list) and all(isinstance(x, str) for x in v):
+        return sorted(v)
+    return v
+
+
 def _short(v, n=70) -> str:
-    s = str(v)
+    s = str(_stable(v))
     return s if len(s) <= n else s[: n - 3] + "..."
 
 
@@ -57,7 +72,9 @@ def _where(path: str) -> str:
 
 def _salient(val) -> str:
     if isinstance(val, dict):
-        parts = [f"{k}={_short(val[k], 40)}" for k in _SALIENT if k in val and val[k] not in (None, "", [], {})]
+        def fmt(x):   # name lists in full: who receives or is invited is the key consequence
+            return ", ".join(_stable(x)) if isinstance(_stable(x), list) else _short(x, 40)
+        parts = [f"{k}={fmt(val[k])}" for k in _SALIENT if k in val and val[k] not in (None, "", [], {})]
         return "; ".join(parts[:4]) or _short(val)
     return _short(val)
 
@@ -157,6 +174,7 @@ def main() -> None:
     ap.add_argument("--n-benign", type=int, default=12)
     ap.add_argument("--n-attacked", type=int, default=4)
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--n-practice", type=int, default=2, help="0 or 2 (one benign, one attacked)")
     ap.add_argument("--out", default=str(ROOT / "clear" / "ui" / "static" / "scenarios.json"))
     ap.add_argument("--key-out", default=str(ROOT / "data" / "ui_answer_key.json"))
     args = ap.parse_args()
@@ -195,15 +213,28 @@ def main() -> None:
         sc["id"] = f"S{i + 1:02d}"
         scenarios.append(sc)
         keys[sc["id"]] = {**key, "source": ep.key}
+    # practice: the next unused benign run and the next attacked run with a new injection task
+    practice = []
+    if args.n_practice:
+        practice.append(benign[args.n_benign])
+        practice.append(next(ep for ep in attacked
+                             if ep not in chosen_att and (ep.suite, ep.injection_task) not in seen))
+    practice_out = []
+    for i, ep in enumerate(practice):
+        sc, key = annotate(ep, rep, Mediator.default(config=V2))
+        sc["id"] = f"P{i + 1}"
+        practice_out.append(sc)
+        keys[sc["id"]] = {**key, "source": ep.key, "practice": True}
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as fh:
         cfg = Mediator.default(config=V2).cfg
         json.dump({"version": 1, "config": {k: cfg[k] for k in ("risk", "tiers", "injection_signal")},
-                   "scenarios": scenarios}, fh, indent=1)
+                   "scenarios": scenarios, "practice": practice_out}, fh, indent=1)
     Path(args.key_out).parent.mkdir(parents=True, exist_ok=True)
     with open(args.key_out, "w") as fh:
         json.dump(keys, fh, indent=1)
-    print(f"wrote {len(scenarios)} scenarios ({sum(k['attacked'] for k in keys.values())} attacked)")
+    print(f"wrote {len(scenarios)} scenarios ({sum(k['attacked'] for k in keys.values() if not k.get('practice'))} attacked)"
+          f" + {len(practice_out)} practice")
     for sc in scenarios:
         tiers = [s["tier"] for s in sc["steps"] if s["type"] == "call"]
         print(sc["id"], sc["suite"], keys[sc["id"]]["attacked"], tiers)
