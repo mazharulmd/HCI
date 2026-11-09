@@ -111,15 +111,54 @@ def _schedule() -> tuple[list[dict], list[dict]]:
     return data.get("practice", []), data["scenarios"]
 
 
+_BENCH: list[dict] | None = None
+
+
+def benchmark_benign_tasks() -> list[dict]:
+    """Benign held-out benchmark tasks with >= 1 side-effecting call, as dialog schedules
+    (CLEAR v2 tier and side-effect flag of every call); used to model a representative task set."""
+    global _BENCH
+    if _BENCH is None:
+        import glob
+        tiers = {0: "ALLOW", 1: "NOTIFY", 2: "CONFIRM", 3: "FORCE"}
+        cols = ["key", "idx", "model", "suite", "attack", "side_effecting", "tier_clear_v2"]
+        c = pd.concat(pd.read_csv(f, compression="gzip", usecols=cols)
+                      for f in glob.glob(str(ROOT / "data" / "derived" / "calls_*.csv.gz")))
+        c = c[(c.attack == "none") & ~c.model.str.contains("repeat_user_prompt|spotlighting|tool_filter|pi_detector")]
+        c = c[~((c.model == "gpt-4o-2024-05-13") & c.suite.isin(["banking", "slack"]))]   # development split
+        _BENCH = []
+        for k, g in c.groupby("key"):
+            if g.side_effecting.sum() >= 1:
+                _BENCH.append({"id": f"bench:{k}", "steps": [
+                    {"type": "call", "idx": int(r.idx), "tier": tiers[int(r.tier_clear_v2)],
+                     "side_effecting": bool(r.side_effecting)} for r in g.sort_values("idx").itertuples()]})
+    return _BENCH
+
+
 def model_participant(cond: str, practice: list[dict], tasks: list[dict],
-                      rng: random.Random, mix: dict[str, float]) -> list[tuple]:
+                      rng: random.Random, mix: dict[str, float], extra_benign: int = 0,
+                      benign_source: str = "study") -> list[tuple]:
+    """One simulated participant. extra_benign > 0 models a longer session with that many
+    additional benign tasks, in random order. benign_source="benchmark" replaces the study's
+    benign tasks by tasks drawn from the held-out benchmark (a representative task set)."""
     selective, evidence = CONDITIONS[cond]
     user = SimulatedUser(draw_user(rng, mix), rng)
-    off = rng.randrange(len(tasks))
-    order = practice + [tasks[(i + off) % len(tasks)] for i in range(len(tasks))]
+    if benign_source == "benchmark":
+        pool = benchmark_benign_tasks()
+        n_benign = len([t for t in tasks if t["id"] not in ATTACKED]) + extra_benign
+        body = [t for t in tasks if t["id"] in ATTACKED] + [rng.choice(pool) for _ in range(n_benign)]
+        rng.shuffle(body)
+    elif extra_benign:
+        benign = [t for t in tasks if t["id"] not in ATTACKED]
+        body = tasks + [rng.choice(benign) for _ in range(extra_benign)]
+        rng.shuffle(body)
+    else:
+        off = rng.randrange(len(tasks))
+        body = [tasks[(i + off) % len(tasks)] for i in range(len(tasks))]
+    order = practice + body
     out = []
     for sc in order:
-        injected = set(KEY[sc["id"]]["injected_calls"])   # practice tasks included
+        injected = set(KEY[sc["id"]]["injected_calls"]) if sc["id"] in KEY else set()   # practice included
         denied = set()
         for st in sc["steps"]:
             if st["type"] != "call":
@@ -136,7 +175,7 @@ def model_participant(cond: str, practice: list[dict], tasks: list[dict],
 
 
 def _model_cell(args) -> dict:
-    n, mix_name, mix, sims, seed = args
+    n, mix_name, mix, extra, source, sims, seed = args
     practice, tasks = _schedule()
     rng = random.Random(seed)
     hits = np.zeros((sims, 3), dtype=bool)
@@ -145,12 +184,13 @@ def _model_cell(args) -> dict:
         rows = []
         for cond in CONDITIONS:
             for i in range(n):
-                rows += [(f"{cond}-{i}",) + r for r in model_participant(cond, practice, tasks, rng, mix)]
+                rows += [(f"{cond}-{i}",) + r for r in model_participant(cond, practice, tasks, rng, mix, extra, source)]
         d = pd.DataFrame(rows, columns=["pid", "condition", "scenario", "prevented"]).assign(attacked=True)
         hits[k] = analyse(d)
         rates.append(d.groupby("condition").prevented.mean())
     r = pd.concat(rates, axis=1).mean(axis=1)
-    return {"population": mix_name, "n_per_cell": n, "sims": sims,
+    return {"population": mix_name, "benign_tasks": source, "session_tasks": len(tasks) + extra,
+            "n_per_cell": n, "sims": sims,
             "power_selectivity": hits[:, 0].mean(), "power_evidence": hits[:, 1].mean(),
             "power_both": (hits[:, 0] & hits[:, 1]).mean(), "fit_failures": 1 - hits[:, 2].mean(),
             **{f"mean_prevention_{c}": float(r[c]) for c in CONDITIONS}}
@@ -183,6 +223,11 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--seed", type=int, default=20261109)
     ap.add_argument("--skip-model", action="store_true")
+    ap.add_argument("--skip-grid", action="store_true")
+    ap.add_argument("--extra-benign", type=int, nargs="+", default=[0],
+                    help="model-anchored only: extra benign tasks per session (longer sessions)")
+    ap.add_argument("--benign-source", choices=["study", "benchmark"], nargs="+", default=["study"],
+                    help="model-anchored only: the study's 12 benign tasks, or tasks drawn from the benchmark")
     ap.add_argument("--out", default=str(ROOT / "results" / "power"))
     args = ap.parse_args()
     out = Path(args.out)
@@ -192,21 +237,29 @@ def main() -> None:
     jobs = [(n, b, o, s, args.sigma_v, args.sims, args.seed + i) for i, (n, b, o, s) in enumerate(cells)]
     mixes = {"balanced": {"novice": 1 / 3, "intermediate": 1 / 3, "security_aware": 1 / 3},
              "mostly_novice": {"novice": 0.6, "intermediate": 0.3, "security_aware": 0.1}}
-    mjobs = [(n, name, mix, args.model_sims, args.seed + 10_000 + i)
-             for i, (n, (name, mix)) in enumerate(product(args.n_per_cell, mixes.items()))]
+    mjobs = [(n, name, mix, extra, src, args.model_sims, args.seed + 10_000 + i)
+             for i, (n, (name, mix), extra, src) in enumerate(product(args.n_per_cell, mixes.items(),
+                                                                         args.extra_benign, args.benign_source))]
     with ProcessPoolExecutor(args.workers) as ex:
-        grid = pd.DataFrame(ex.map(_grid_cell, jobs))
+        grid = pd.DataFrame([] if args.skip_grid else ex.map(_grid_cell, jobs))
         model = pd.DataFrame([] if args.skip_model else ex.map(_model_cell, mjobs))
-    grid.to_csv(out / "power_grid.csv", index=False)
-    rec = recommend(grid, args.target)
-    rec.to_csv(out / "power_recommendation.csv", index=False)
+    rec = pd.DataFrame()
+    if len(grid):
+        grid.to_csv(out / "power_grid.csv", index=False)
+        rec = recommend(grid, args.target)
+        rec.to_csv(out / "power_recommendation.csv", index=False)
     if len(model):
-        model.to_csv(out / "power_model_anchored.csv", index=False)
+        name = ("power_model_anchored.csv" if args.extra_benign == [0] and args.benign_source == ["study"]
+                else "power_model_design_variants.csv")
+        model.to_csv(out / name, index=False)
     meta = {k: v for k, v in vars(args).items()}
     meta["alpha"], meta["exclusion_allowance"] = ALPHA, EXCLUSION_ALLOWANCE
-    (out / "power_settings.json").write_text(json.dumps(meta, indent=1))
+    variant = args.extra_benign != [0] or args.benign_source != ["study"]
+    tag = "" if not args.skip_grid else "_design_variants" if variant else "_model"
+    (out / f"power_settings{tag}.json").write_text(json.dumps(meta, indent=1))
     pd.set_option("display.width", 200)
-    print(rec.to_string(index=False))
+    if len(rec):
+        print(rec.to_string(index=False))
     if len(model):
         print(model.to_string(index=False))
 
