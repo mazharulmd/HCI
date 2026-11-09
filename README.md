@@ -1,8 +1,8 @@
 # CLEAR: Human-Centred, Provenance-Aware Mediation of AI-Agent Tool Calls Against Prompt Injection
 
 > **Combined version (v2).** This branch merges the three iterations of the project:
-> *Trust Boundary Lab* (ChatGPT, branch `research/source-to-action-review`),
-> *PROV-Guard* (Gemini, branch `research/prov-guard-hci-defense`) and *CLEAR* (Claude).
+> *Trust Boundary Lab* (ChatGPT, `archive/chatgpt-trust-boundary-lab/`),
+> *PROV-Guard* (Gemini, `archive/gemini-prov-guard/`) and *CLEAR* (Claude).
 > Each borrowed idea was re-implemented and evaluated on real agent trajectories.
 > Limitations of the earlier iterations are documented with reproducible evidence in
 > [`docs/prior_iterations_audit.md`](docs/prior_iterations_audit.md).

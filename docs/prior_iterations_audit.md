@@ -1,13 +1,18 @@
 # Audit of the three research iterations and how they were combined
 
 This project was attempted three times, with three different AI assistants.
-All three outputs are preserved as branches of this repository:
+All three outputs are preserved in this repository's `main` branch, with their
+full commit histories:
 
-| Branch | Produced with | Name of the artefact |
+| Location | Produced with | Name of the artefact |
 |---|---|---|
-| `research/source-to-action-review` | ChatGPT | *Trust Boundary Lab* |
-| `research/prov-guard-hci-defense` | Gemini (pushed unchanged from the uploaded archive, commit `5bfbe43`) | *PROV-Guard* |
-| `main` / `claude/upbeat-davinci-2p754q` | Claude | *CLEAR*, now the combined version |
+| `archive/chatgpt-trust-boundary-lab/` (formerly branch `research/source-to-action-review`, commit `31bdb7a`) | ChatGPT | *Trust Boundary Lab* |
+| `archive/gemini-prov-guard/` (formerly branch `research/prov-guard-hci-defense`, commit `5bfbe43`, pushed unchanged from the uploaded archive) | Gemini | *PROV-Guard* |
+| repository root | Claude | *CLEAR*, now the combined version |
+
+A later review commit (formerly branch `research/main-paper-review`, commit
+`45b70ce`) introduced task-level clustering of the statistics; it is merged
+into `main`.
 
 This document records what each iteration contributes, which limitations were
 found (with reproducible evidence), and how the combined version fixes them.
