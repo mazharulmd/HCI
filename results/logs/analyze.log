@@ -25,12 +25,12 @@
     "percent_agreement": 0.9552518461368896,
     "cohen_kappa": 0.9102764550806467
   },
-  "interruptions_wilcoxon": {
+  "interruptions_task_signflip": {
     "clear_vs_confirm_all": {
-      "W": 0.0,
-      "p": 1.5701930724164592e-116,
-      "r_rb": -1.0,
-      "n_nonzero": 612
+      "mean_difference": -0.4121680724773509,
+      "p": 9.99990000099999e-06,
+      "n_tasks": 97,
+      "n_nonzero_tasks": 51
     },
     "reduction_ratio": 0.51475015051174,
     "share_benign_tasks_without_dialog_clear": 0.7395038167938931,

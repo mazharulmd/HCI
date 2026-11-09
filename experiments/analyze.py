@@ -9,13 +9,13 @@ results/human_sim.csv (from human_sim.py), writes
 Statistics
 ----------
 * 95% confidence intervals: cluster bootstrap (2,000 resamples) over
-  (model, suite, user task) clusters, because episodes of the same user task
-  are not independent.
-* Paired binary outcomes (same episodes, two policies): exact McNemar test
-  (two-sided binomial test on discordant pairs); Holm correction within each
-  family of comparisons.
-* Paired counts (interruptions per benign episode): Wilcoxon signed-rank test,
-  with matched-pairs rank-biserial correlation as effect size.
+  (suite, user task) clusters, shared across model pipelines.
+* Paired policy contrasts aggregate differences by benchmark task, then use a
+  task-cluster sign-flip test; repeated model runs of a task are not treated as
+  independent observations. Tests enumerate all sign assignments through 20
+  clusters and use 100,000 Monte Carlo assignments above that. Holm correction
+  is within each family. The sign-flip null assumes symmetry of task-level
+  paired differences; inference is therefore conditional on this assumption.
 * Call-level discrimination: AUROC (Mann-Whitney) with cluster-bootstrap CI.
 """
 from __future__ import annotations
@@ -85,7 +85,8 @@ def load_episodes() -> pd.DataFrame:
         df.loc[m, "defence"] = suf[1:]
         df.loc[m, "model"] = df.loc[m, "model"].str[: -len(suf)]
     df["dev"] = (df["pipeline"] == "gpt-4o-2024-05-13") & df["suite"].isin(["banking", "slack"])
-    df["cluster"] = df["pipeline"] + "|" + df["suite"] + "|" + df["user_task"]
+    # AgentDojo tasks recur across model pipelines; resample the task as a unit.
+    df["cluster"] = df["suite"] + "|" + df["user_task"]
     return df
 
 
@@ -100,7 +101,7 @@ def load_calls() -> pd.DataFrame:
     for suf in DEFENCE_SUFFIXES:
         df.loc[df["pipeline"].str.endswith(suf), "defence"] = suf[1:]
     df["dev"] = (df["pipeline"] == "gpt-4o-2024-05-13") & df["suite"].isin(["banking", "slack"])
-    df["cluster"] = df["pipeline"] + "|" + df["key"].str.split("|").str[1] + "|" + df["key"].str.split("|").str[2]
+    df["cluster"] = df["key"].str.split("|").str[1] + "|" + df["key"].str.split("|").str[2]
     return df
 
 
@@ -144,6 +145,22 @@ def mcnemar_exact(a: np.ndarray, b: np.ndarray) -> dict:
     return {"n10": n10, "n01": n01, "p": p, "diff": float(a.mean() - b.mean()), "n": int(len(a))}
 
 
+def task_signflip(differences: pd.Series) -> float:
+    """Two-sided task-level sign-flip p-value (Monte Carlo above 20 clusters)."""
+    values = differences.dropna().to_numpy(float)
+    n = len(values)
+    if n == 0:
+        return 1.0
+    observed = abs(values.mean())
+    if n <= 20:
+        signs = np.array(np.meshgrid(*[[-1.0, 1.0]] * n)).T.reshape(-1, n)
+        null = np.abs((signs * values).mean(axis=1))
+        return float(np.mean(null >= observed - 1e-12))
+    rng = np.random.default_rng(SEED)
+    signs = rng.choice([-1.0, 1.0], size=(100_000, n))
+    return float((1 + np.sum(np.abs((signs * values).mean(axis=1)) >= observed)) / 100_001)
+
+
 def holm(pvals: list[float]) -> list[float]:
     m = len(pvals)
     order = np.argsort(pvals)
@@ -155,17 +172,18 @@ def holm(pvals: list[float]) -> list[float]:
     return adj.tolist()
 
 
-def wilcoxon_paired(x, y) -> dict:
+def task_paired_signflip(x, y) -> dict:
+    pair_index = x.index if isinstance(x, pd.Series) else pd.RangeIndex(len(x))
     x, y = np.asarray(x, float), np.asarray(y, float)
     d = x - y
-    nz = d[d != 0]
-    if len(nz) == 0:
-        return {"W": 0.0, "p": 1.0, "r_rb": 0.0, "n_nonzero": 0}
-    res = stats.wilcoxon(nz)
-    ranks = stats.rankdata(np.abs(nz))
-    r_plus, r_minus = ranks[nz > 0].sum(), ranks[nz < 0].sum()
-    return {"W": float(res.statistic), "p": float(res.pvalue), "r_rb": float((r_plus - r_minus) / ranks.sum()),
-            "n_nonzero": int(len(nz))}
+    # Keys encode model|suite|user_task|attack|injection; average repeated model
+    # observations within suite/task before inference.
+    keys = pair_index.to_series().astype(str).str.split("|")
+    task_clusters = keys.str[1] + "|" + keys.str[2]
+    task_d = pd.Series(d, index=task_clusters.to_numpy()).groupby(level=0).mean()
+    nz = task_d[task_d != 0]
+    return {"mean_difference": float(task_d.mean()), "p": task_signflip(task_d),
+            "n_tasks": int(len(task_d)), "n_nonzero_tasks": int(len(nz))}
 
 
 def auroc(scores, labels) -> float:
@@ -224,8 +242,13 @@ def paired_tests(ep: pd.DataFrame, ref: str, others: list[str], metric: str, sub
     rows = []
     for o in others:
         sub = piv[[ref, o]].dropna()
-        rows.append({"comparison": f"{ref} vs {o}", "metric": metric, **mcnemar_exact(sub[ref].astype(bool),
-                                                                                      sub[o].astype(bool))})
+        discord = mcnemar_exact(sub[ref].astype(bool), sub[o].astype(bool))
+        clusters = (d.drop_duplicates("key").set_index("key").loc[sub.index, "cluster"]
+                    if "cluster" in d else pd.Series(sub.index, index=sub.index))
+        diffs = pd.Series(sub[ref].astype(float).to_numpy() - sub[o].astype(float).to_numpy(),
+                          index=clusters.to_numpy()).groupby(level=0).mean()
+        rows.append({"comparison": f"{ref} vs {o}", "metric": metric, **discord,
+                     "p": task_signflip(diffs), "n_task_clusters": int(len(diffs))})
     res = pd.DataFrame(rows)
     res["p_holm"] = holm(res["p"].tolist())
     return res
@@ -503,11 +526,11 @@ def write_paper_tables(st: dict, main: pd.DataFrame, pub: pd.DataFrame, at: pd.D
         mac(f"ua{name}", pct(r.UA))
         mac(f"dlg{name}", f"{r.int_benign:.2f}")
         mac(f"dlgAtt{name}", f"{r.int_attacked:.2f}")
-    w = st["interruptions_wilcoxon"]
+    w = st["interruptions_task_signflip"]
     mac("dlgReduction", pct(w["reduction_ratio"], 0))
     mac("noDialogClear", pct(w["share_benign_tasks_without_dialog_clear"], 0))
     mac("noDialogCall", pct(w["share_benign_tasks_without_dialog_confirm_all"], 0))
-    mac("wilcoxP", f"{w['clear_vs_confirm_all']['p']:.1e}".replace("e-", r"\times10^{-") + "}")
+    mac("taskP", f"{w['clear_vs_confirm_all']['p']:.1e}".replace("e-", r"\times10^{-") + "}")
     cl = {r["variant"]: r for r in st["call_level"]}
     mac("recall", pct(cl["clear"]["escalation_recall"]))
     mac("fer", pct(cl["clear"]["false_escalation_rate"]))
@@ -672,14 +695,14 @@ def main() -> None:
     tests.to_csv(TAB / "paired_tests.csv", index=False)
     statsout["paired_tests"] = tests.to_dict(orient="records")
     bpiv = core[~core.attacked].pivot_table(index="key", columns="policy", values="confirm", aggfunc="first")
-    statsout["interruptions_wilcoxon"] = {
-        "clear_vs_confirm_all": wilcoxon_paired(bpiv["clear:oracle"], bpiv["confirm_all:oracle"]),
+    statsout["interruptions_task_signflip"] = {
+        "clear_vs_confirm_all": task_paired_signflip(bpiv["clear:oracle"], bpiv["confirm_all:oracle"]),
         "reduction_ratio": float(1 - bpiv["clear:oracle"].mean() / bpiv["confirm_all:oracle"].mean()),
         "share_benign_tasks_without_dialog_clear": float((bpiv["clear:oracle"] == 0).mean()),
         "share_benign_tasks_without_dialog_confirm_all": float((bpiv["confirm_all:oracle"] == 0).mean()),
     }
     apiv = core[core.attacked].pivot_table(index="key", columns="policy", values="confirm", aggfunc="first")
-    statsout["interruptions_attacked_wilcoxon"] = wilcoxon_paired(apiv["clear:oracle"], apiv["confirm_all:oracle"])
+    statsout["interruptions_attacked_task_signflip"] = task_paired_signflip(apiv["clear:oracle"], apiv["confirm_all:oracle"])
 
     # ------------------------------------------------ sensitivity: drop low-fidelity pipelines
     low = set(statsout["dataset"]["low_fidelity_pipelines"])
@@ -856,7 +879,7 @@ def main() -> None:
 
     with open(ROOT / "results" / "stats.json", "w") as fh:
         json.dump(statsout, fh, indent=2, default=float)
-    print(json.dumps({k: statsout[k] for k in ("dataset", "label_agreement", "interruptions_wilcoxon",
+    print(json.dumps({k: statsout[k] for k in ("dataset", "label_agreement", "interruptions_task_signflip",
                                                "latency_ms")}, indent=2, default=float))
     print(main[["label", "ASR", "UA", "BU", "int_benign", "int_attacked"]].to_string())
 

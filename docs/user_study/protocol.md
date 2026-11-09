@@ -1,11 +1,12 @@
-# User-study protocol (pre-registration draft)
+# Proposed user-study protocol (not yet preregistered)
 
-**Status: NOT YET CONDUCTED.** No participant data exist. This protocol, the
-consent form, the debriefing and the analysis plan are ready for submission to
-an Institutional Review Board / Ethics Committee. The study apparatus is
-implemented (`clear/ui`) for a **laboratory** study and was verified end-to-end
-with automated browser sessions, not with people. How to run a session is
-described in `lab_runbook.md`.
+**Status: NOT YET SUBMITTED, PREREGISTERED OR CONDUCTED.** No participant data
+exist. This protocol, the consent form, the debriefing and the analysis plan are
+drafts for review by an Institutional Review Board / Ethics Committee before
+recruitment, and are to be preregistered (for example on OSF) after approval.
+The study apparatus is implemented (`clear/ui`) for a **laboratory** study and
+was verified end-to-end with automated browser sessions, not with people. How to
+run a session is described in `lab_runbook.md`.
 
 ## 1. Title
 Do provenance-aware, risk-adaptive confirmations help people stop prompt-injected AI-agent actions?
@@ -35,8 +36,8 @@ follows the recommendation of the Trust Boundary Lab iteration (see
 
 ## 4. Participants
 * **N = 220** adults (55 per cell), recruited from the university participant pool and by notices on campus. Fluent English. Have used e-mail and online banking. Sessions take place in a computer laboratory; several participants can take part at once on separate computers.
-* **Power analysis.** Each main effect compares 110 vs 110 participants. With α = .05 (two-sided) and power .80, a standardised effect of d = 0.4 on participant-level prevention rates requires 100 per factor level (statsmodels `TTestIndPower`). 55 per cell allows about 9% exclusions. The interaction is exploratory, because detecting it with equal power would need about four times the sample.
-* **Exclusion criteria (pre-registered).** Failing both attention checks; completing the 16 tasks in under 4 minutes; technical failure that prevents logging (fewer than 16 tasks logged); the condition shown in the browser differs from the server's assignment. Pilot sessions use participant codes starting with `PILOT` and are never analysed.
+* **Provisional recruitment target, not a power analysis.** N = 220 is an initial planning target. An independent-samples calculation (d = 0.4, α = .05, power .80 needs 100 per factor level) motivated it, but it does not establish power for the clustered primary analysis in section 7. Before recruitment, run a simulation-based power analysis of that analysis, using justified baseline prevention rates and between-participant variance (for example from the pilot sessions), and adjust N if needed. The interaction is exploratory.
+* **Exclusion criteria (to preregister before recruitment).** Failing both attention checks; completing the 16 tasks in under 4 minutes; technical failure that prevents logging (fewer than 16 tasks logged); the condition shown in the browser differs from the server's assignment. Pilot sessions use participant codes starting with `PILOT` and are never analysed.
 * **Compensation** at or above the local minimum wage, prorated for an expected 35 minutes.
 
 ## 5. Materials and procedure
