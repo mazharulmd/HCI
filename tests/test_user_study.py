@@ -160,3 +160,16 @@ def test_analysis_runs_on_synthetic_logs(tmp_path):
     assert len(summary["noninferiority"]) == 2
     assert {r["variant"] for r in summary["robustness_gee"]} == {"passed both attention checks",
                                                                  "first attacked task excluded"}
+
+
+def test_power_simulation_calibration():
+    """No true effect -> rare rejections; a large effect -> high power (simulated studies only)."""
+    from experiments import power_user_study as pw
+    null = pw._grid_cell((40, 0.5, 1.0, 1.0, 0.5, 60, 1))
+    big = pw._grid_cell((60, 0.5, 4.0, 0.5, 0.5, 30, 2))
+    assert null["power_selectivity"] <= 0.15 and null["power_evidence"] <= 0.15
+    assert big["power_both"] >= 0.8
+    rng = __import__("random").Random(0)
+    practice, tasks = pw._schedule()
+    rows = pw.model_participant("clear", practice, tasks, rng, {"intermediate": 1.0})
+    assert sorted(r[1] for r in rows) == sorted(pw.ATTACKED)
