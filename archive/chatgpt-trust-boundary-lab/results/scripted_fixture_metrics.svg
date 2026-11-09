@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="410" viewBox="0 0 900 410">
+<rect width="100%" height="100%" fill="white"/>
+<style>text{font-family:Arial,sans-serif;fill:#172235}.small{font-size:13px}.title{font-size:20px;font-weight:bold}.axis{stroke:#aab6c2;stroke-width:1}</style>
+<text x="30" y="32" class="title">Scripted policy outcomes on constructed fixtures only</text>
+<text x="30" y="54" class="small">n=8 scenarios per condition; three attack-labeled fixtures; not user-study or deployment evidence</text>
+<line x1="245.0" y1="80" x2="245.0" y2="355" class="axis"/>
+<text x="245.0" y="376" class="small" text-anchor="middle">0%</text>
+<line x1="341.0" y1="80" x2="341.0" y2="355" class="axis"/>
+<text x="341.0" y="376" class="small" text-anchor="middle">20%</text>
+<line x1="437.0" y1="80" x2="437.0" y2="355" class="axis"/>
+<text x="437.0" y="376" class="small" text-anchor="middle">40%</text>
+<line x1="533.0" y1="80" x2="533.0" y2="355" class="axis"/>
+<text x="533.0" y="376" class="small" text-anchor="middle">60%</text>
+<line x1="629.0" y1="80" x2="629.0" y2="355" class="axis"/>
+<text x="629.0" y="376" class="small" text-anchor="middle">80%</text>
+<line x1="725.0" y1="80" x2="725.0" y2="355" class="axis"/>
+<text x="725.0" y="376" class="small" text-anchor="middle">100%</text>
+<text x="231" y="118" class="small" text-anchor="end">baseline</text>
+<rect x="245" y="95" width="480.0" height="16" rx="3" fill="#b64242"/>
+<text x="737" y="108" class="small">100% Attack success</text>
+<rect x="245" y="117" width="0.0" height="16" rx="3" fill="#356a9a"/>
+<text x="737" y="130" class="small">0% Benign blocks</text>
+<text x="231" y="188" class="small" text-anchor="end">risk_badge</text>
+<rect x="245" y="165" width="0.0" height="16" rx="3" fill="#b64242"/>
+<text x="737" y="178" class="small">0% Attack success</text>
+<rect x="245" y="187" width="0.0" height="16" rx="3" fill="#356a9a"/>
+<text x="737" y="200" class="small">0% Benign blocks</text>
+<text x="231" y="258" class="small" text-anchor="end">provenance_consent</text>
+<rect x="245" y="235" width="120.0" height="16" rx="3" fill="#b64242"/>
+<text x="737" y="248" class="small">25% Attack success</text>
+<rect x="245" y="257" width="120.0" height="16" rx="3" fill="#356a9a"/>
+<text x="737" y="270" class="small">25% Benign blocks</text>
+<text x="231" y="328" class="small" text-anchor="end">combined</text>
+<rect x="245" y="305" width="0.0" height="16" rx="3" fill="#b64242"/>
+<text x="737" y="318" class="small">0% Attack success</text>
+<rect x="245" y="327" width="120.0" height="16" rx="3" fill="#356a9a"/>
+<text x="737" y="340" class="small">25% Benign blocks</text>
+<text x="450" y="401" class="small" text-anchor="middle">Metric value</text></svg>
