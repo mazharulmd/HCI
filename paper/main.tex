@@ -1,14 +1,15 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[preprint,12pt,authoryear]{elsarticle}
 % ---------------------------------------------------------------------------
-% Portable manuscript source. For submission, port the body into the target
-% journal's class (e.g. elsarticle for IJHCS / Computers & Security, or acmart
-% for ACM TOCHI); all numbers come from generated/numbers.tex, which is written
-% by experiments/analyze.py, so results cannot drift from the code.
+% Manuscript for Computers & Security (Elsevier), elsarticle class, author-year
+% references (elsarticle-harv). All numbers come from generated/*.tex, which are
+% written by experiments/analyze.py and experiments/analyze_v2.py, so results cannot
+% drift from the code. Highlights are also supplied as a separate file
+% (paper/highlights.txt), as the journal requests.
 % ---------------------------------------------------------------------------
+\journal{Computers \& Security}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
-\usepackage[margin=2.5cm]{geometry}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -16,10 +17,10 @@
 \usepackage{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric}
-\usepackage[numbers,sort&compress]{natbib}
 \usepackage{microtype}
 \usepackage{subcaption}
 \usepackage{enumitem}
+\usepackage{lineno}
 \usepackage{hyperref}
 \usepackage[capitalise,noabbrev]{cleveref}
 \hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
@@ -34,67 +35,64 @@
 \newcommand{\clear}{\textsc{Clear}}
 \newcommand{\tier}[1]{\textsf{#1}}
 
-\title{Human--Computer Interaction for Secure AI Tool Usage:\\
-Provenance-Aware, Risk-Adaptive Design Patterns Against Prompt Injection}
-
-\author{[Author names withheld for review]\\
-\small [Affiliation]\\
-\small \texttt{[corresponding e-mail]}}
-
-\date{Manuscript prepared 27 October 2026}
-
 \begin{document}
-\maketitle
+\begin{frontmatter}
+
+\title{Provenance-aware, risk-adaptive mediation of AI-agent tool calls against
+indirect prompt injection}
+
+% Author block: replace the placeholders before submission.
+\author[aff1]{[Author name]\corref{cor1}}
+\ead{[corresponding e-mail]}
+\cortext[cor1]{Corresponding author.}
+\affiliation[aff1]{organization={[Department, University]},
+            city={[City]},
+            country={[Country]}}
 
 \begin{abstract}
-\noindent
-Tool-using AI agents can be hijacked by \emph{indirect prompt injection}:
-instructions hidden in e-mails, documents or web pages that the agent reads.
-System-level defences that block every untrusted data flow lose utility on the
-many legitimate tasks that \emph{must} use such data. Deployed agents therefore
-fall back on the human, usually through generic ``approve this action?'' dialogs,
-which usable-security research shows fail when they are frequent and
-uninformative.
-
-We present \clear{} (Contextual, Lineage-aware, Escalating Agent-action
-Review), a human-centred mediation framework that decides \emph{when} to
-involve the user and \emph{what} to show them. It consolidates three design
-iterations into eight testable design patterns (P0--P7). \clear{} attributes every argument of
-every proposed tool call to its source; attribution is decoding-aware, so it
-resists provenance laundering. Contextual risk is scored from interpretable
-features and drives four escalation tiers. Dialogs pair source-to-action
-excerpts with a consequence preview computed in a sandbox, and the
-highest-risk tier adds a cognitive-forcing check. We prove a conditional
-escalation floor: when the provenance ledger correctly attributes a
-consequential target to an untrusted source, attacker-controlled text alone
-cannot lower the resulting tier. This is not a guarantee of complete attack
-detection.
-
-We replay \nEpisodes{} real trajectories of \nModels{} LLM agents and five
-published defences in AgentDojo, recomputing the benchmark's own predicates
-(replay agreement \fidU\%/\fidS\%). On held-out episodes \clear{} reduces
-attack success from \asrNone\% to \asrClearO\% with a perfectly discerning
-user, and to \asrClearA\% when every escalation is denied. It asks
-\dlgReduction\% fewer questions than confirm-every-action (\dlgClearO{} vs.\
-\dlgCallO{} per benign task; task-cluster test $p<.001$). We also simulate an attacker who encodes the target value, measuring residual
-success among attacks that beat the undefended agent. Lexical lineage then lets
-\laundVoneMin--\laundVoneMax\% succeed instead of \laundPlainVal\%, and
-decoding-aware lineage restores \laundVtwoVal\%. Against detector-evading phrasing, \clear{} holds at
-\asrEvadeClear\%, while a provenance-free mediator stays at or above
-\asrEvadeNoProvMin\%. On 250 template-generated stress scenarios spanning code, cloud
-and finance, \clear{} matches the recall of two alternative HCI engines with far
-fewer false escalations of benign high-privilege actions (\cbClearFer\% vs.\
-\cbTbFer\% and \cbPgFer\%). On 8 argument-free fixtures it misses 2 of 4 attacks. A goal-drift signal borrowed from an earlier
-iteration was rejected on development data.
-
-A parametric, habituation-aware user model (\emph{not human data}) predicts
+Tool-using AI agents can be hijacked by indirect prompt injection: instructions
+hidden in e-mails, documents or web pages that the agent reads. Strict
+information-flow defences block many legitimate tasks, so deployed agents fall
+back on generic approval dialogs, which people learn to ignore. We present
+\clear{}, a provenance-aware mediator that decides when to involve the user and
+what to show them. \clear{} attributes every argument of a proposed tool call to
+its source, scores contextual risk from interpretable features, and escalates
+through four tiers. Its dialogs show
+the source passage, a consequence preview computed in a sandbox and, at the
+highest tier, a cognitive-forcing check. We prove a conditional escalation floor
+that attacker-controlled text cannot lower. Replaying \nEpisodes{} real
+trajectories of \nModels{} LLM agents and five published defences in AgentDojo,
+\clear{} reduces held-out attack success from \asrNone\% to \asrClearO\% with an
+ideal user (\asrClearA\% when every escalation is denied), while asking
+\dlgReduction\% fewer questions than confirming every action. Its protection
+survives detector-evading phrasing (\asrEvadeClear\%, against at least
+\asrEvadeNoProvMin\% for a provenance-free mediator) and, with decoding-aware
+lineage, value laundering (\laundVtwoVal\%, against up to \laundVoneMax\%
+without decoding). On 250 synthetic stress scenarios it keeps full recall with
+far fewer false escalations of benign high-privilege actions than two
+alternative engines (\cbClearFer\% against \cbTbFer\% and \cbPgFer\%). A
+habituation-aware user model, a simulation rather than human data, predicts
 lower end-to-end compromise than confirm-all in \simShare\% of \simGridN{}
-settings and across heterogeneous user populations. We release all code, data,
-an instrumented console and a proposed $2{\times}2$ factorial user-study
-protocol, which has not been preregistered or run.
+settings. Code, data and a proposed user-study protocol are released; no
+human study has been run.
 \end{abstract}
 
-\noindent\textbf{Keywords:} prompt injection; LLM agents; human-in-the-loop; usable security; provenance; security warnings; habituation; human--AI interaction
+\begin{highlights}
+\item Provenance-aware mediation decides when an AI agent must ask its user.
+\item Conditional escalation floor: attacker text cannot lower external targets' tier.
+\item Replay of 24,648 real agent trajectories: attack success 16.5\% to 0.7\%.
+\item 51\% fewer approval dialogs than confirming every side-effecting action.
+\item Protection survives detector-evading phrasing and encoded (laundered) values.
+\end{highlights}
+
+\begin{keyword}
+prompt injection \sep LLM agents \sep human-in-the-loop security \sep usable
+security \sep information provenance \sep security warnings \sep habituation \sep
+access control
+\end{keyword}
+
+\end{frontmatter}
+\linenumbers   % after the front matter: lineno breaks the title page otherwise
 
 % =========================================================================
 \section{Introduction}
@@ -335,7 +333,7 @@ executable mediation and trace-replay contributions described above.
 \centering\small
 \caption{Where is the human? Representative prompt-injection defences by human role and evidence. ``Burden'' marks whether the human cost of the defence is reported.}
 \label{tab:taxonomy}
-\begin{tabular}{p{3.0cm}p{5.6cm}p{3.5cm}c}
+\begin{tabular}{p{0.19\linewidth}p{0.35\linewidth}p{0.23\linewidth}c}
 \toprule
 Human role & Representative work & What the human sees & Burden \\
 \midrule
@@ -492,10 +490,12 @@ o(v)=\begin{cases}
 For a proposed call $a=(f,\mathbf{x})$ with target arguments $T_f$, value
 arguments $V_f$ and content arguments $K_f$, \clear{} computes five features.
 
-\textbf{Taint} $\tau(a)=\max\big(\max_{v\in T_f}\rho_T(o(v)),\ \max_{v\in V_f}\rho_V(o(v)),\ \max_{z\in Z(K_f)}\rho_K(o(z))\big)$.
+\textbf{Taint}
+\[\tau(a)=\max\Big(\max_{v\in T_f}\rho_T(o(v)),\ \max_{v\in V_f}\rho_V(o(v)),\ \max_{z\in Z(K_f)}\rho_K(o(z))\Big).\]
 Here $\rho_T(\mathsf{E})=1$, $\rho_T(\bot)=0.5$, $\rho_V(\mathsf{E})=\rho_K(\mathsf{E})=0.4$, and all other levels are zero. $Z(\cdot)$ extracts distinctive tokens (URLs, addresses, account numbers, codes) from outgoing content.
 
-\textbf{Exfiltration} $\kappa(a)=\mathbb{1}[\text{egress}(f)\wedge\neg\text{endorsed}(T_f)\wedge\text{payload carries private-source data}]$.
+\textbf{Exfiltration}
+\[\kappa(a)=\mathbb{1}\big[\text{egress}(f)\wedge\neg\text{endorsed}(T_f)\wedge\text{payload carries private-source data}\big].\]
 
 \textbf{Deviation} $\delta(a)=\mathbb{1}[\text{cap}(f)\notin\text{Env}]$, or $0.5$ under explicit delegation.
 
@@ -1054,7 +1054,7 @@ and \popExpClear\% vs.\ \popExpCall\% in a mostly-expert one.
 \centering\small
 \caption{Hypotheses (\cref{sec:intro}; research design in the repository) and outcomes.}
 \label{tab:hyp}
-\begin{tabular}{p{1.0cm}p{8.6cm}p{4.6cm}}
+\begin{tabular}{p{0.06\linewidth}p{0.46\linewidth}p{0.38\linewidth}}
 \toprule
 & Hypothesis & Outcome \\
 \midrule
@@ -1121,67 +1121,15 @@ the 16 tasks, \clear{} and its generic variant raised 13 dialogs, and both
 confirm-all variants raised 18, with no client errors.
 
 % =========================================================================
-\section{Lessons from three design iterations}
-\label{sec:lessons}
-\clear{} is the third iteration of this project. Its predecessors were built
-with different AI research assistants, and their artefacts are preserved in the
-repository. Auditing them yielded both design ideas and a methodological
-warning.
-
-\paragraph{What was adopted.} The first iteration (\emph{Trust Boundary Lab})
-framed the task as \emph{source-to-action review}. That framing became P2's
-excerpt display. It also proposed the factorial study design adopted in
-\cref{sec:study}. The second iteration (\emph{PROV-Guard}) proposed
-decoded-payload provenance, goal-drift scoring and counterfactual previews. Its
-decoding idea became decoding-aware lineage (P2, \cref{prop:launder}, E1), and
-its preview idea became P7 with \emph{computed} state differences. Goal drift
-was tested and rejected (H8).
-
-\paragraph{What was not adopted, and why.} PROV-Guard reported a 92.6\% attack
-success rate for binary confirmation dialogs, $d'=4.21$ and a 22.9\% NASA-TLX
-reduction for its framework, and $p$-values down to $10^{-16}$ with Cohen's
-$d\approx-49$. All of these came from a simulated user whose response to each
-interface feature was written into the code. For example, hiding provenance
-multiplied the ``cue clarity'' of an attack by 0.42. Re-running its own
-pipeline with only these per-feature multipliers set to neutral moves the
-ablation results substantially:
-
-\begin{center}\small
-\begin{tabular}{lcc}
-\toprule
-Condition (simulated ASR, \%) & as published & multipliers neutral \\
-\midrule
-full framework & \auditFullRep & \auditFullNeu \\
-without goal drift & \auditNoCgasdRep & \auditNoCgasdNeu \\
-without counterfactual preview & \auditNoIcspRep & \auditNoIcspNeu \\
-without provenance & \auditNoDlpaRep & \auditNoDlpaNeu \\
-binary modal & \auditModalRep & \auditModalNeu \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-The component ranking is therefore an artefact of chosen constants. In that
-iteration, the ``Spotlighting'' baseline was a table of catch probabilities,
-and no defence had 100\% ASR by construction. Its benchmark is also separable
-by a single provenance rule (\cref{sec:v2method}). The first iteration had
-briefly scored risk with the ground-truth attack label before correcting
-itself.
-
-\paragraph{Reporting rules.} We derive four rules, which this paper follows.
-\begin{enumerate}[leftmargin=*,itemsep=1pt]
-\item Agent behaviour must come from recorded or live agents, and outcomes from
-  the benchmark's own predicates.
-\item Simulated humans may generate hypotheses but never results. Every
-  parameter is swept and every figure is labelled.
-\item Inferential statistics over simulated participants are not reported.
-\item Defences are evaluated blind to labels, and synthetic benchmarks are
-  checked for trivial separability before use.
-\end{enumerate}
-As AI assistants increasingly draft research artefacts, we believe such audits
-should become routine in HCI-security work.
-
-% =========================================================================
 \section{Discussion}
+\paragraph{Simulated users are for hypotheses, not results.} \clear{} is the
+third iteration of this project; its predecessors were built with other AI
+research assistants. One of them reported large user-study effects that, on
+audit, came from effect sizes written into a simulator. \Cref{sec:lessons}
+documents the audit and the reporting rules this paper follows: agent behaviour
+comes from recorded agents, simulated users only generate hypotheses, and no
+inferential statistics are reported over simulated participants.
+
 \label{sec:discussion}
 
 \paragraph{Provenance is the robust signal; text signals are cheap but brittle.}
@@ -1276,32 +1224,48 @@ run the proposed study, evaluate live agents with retry behaviour and optimised 
 envelope compilers that remain injection-proof, and extend lineage to
 multi-agent and computer-use settings.
 
-\section*{Data and code availability}
+\section*{CRediT authorship contribution statement}
+\textbf{[Author name]:} Conceptualization, Methodology, Software, Validation,
+Formal analysis, Investigation, Data curation, Writing -- original draft,
+Writing -- review \& editing, Visualization, Project administration.
+
+\section*{Declaration of competing interest}
+The authors declare that they have no known competing financial interests or
+personal relationships that could have appeared to influence the work reported
+in this paper.
+
+\section*{Funding}
+This research did not receive any specific grant from funding agencies in the
+public, commercial, or not-for-profit sectors.
+
+\section*{Data availability}
 All source code, configurations, the tool manifest, derived per-episode and
-per-call datasets, analysis scripts, figures, tests, the interactive console
-and the study materials are available in the project repository
-(\url{https://github.com/mazharulmd/HCI}). The raw trajectories are fetched from
-the AgentDojo repository (MIT licence) at the pinned commit. The artefacts of
-the two earlier iterations are preserved unchanged in \texttt{archive/}, and the audit
-in \cref{sec:lessons} can be reproduced from \texttt{results/audit/}.
+per-call datasets, analysis scripts, figures, tests, the interactive console,
+the study materials and the power analysis are available in the project
+repository (\url{https://github.com/mazharulmd/HCI}). The raw trajectories are
+fetched from the AgentDojo repository (MIT licence) at the pinned commit. The
+artefacts of the two earlier iterations are preserved unchanged in
+\texttt{archive/}, and the audit in \cref{sec:lessons} can be reproduced from
+\texttt{results/audit/}.
 
 \section*{Ethics statement}
 No human participants were involved. The proposed user study requires approval
 by an institutional ethics board before any data collection.
 
-\section*{Declaration of generative AI use}
-This project was carried out in three iterations with three AI research
-assistants: OpenAI ChatGPT, Google Gemini and Anthropic Claude, operating under
-the authors' direction. The final version, including the literature search,
-implementation, experiments, audit of the earlier iterations and drafting of
-this manuscript, was produced with substantial assistance from Anthropic
-Claude. Findings from the earlier iterations that rested on simulated
-participants are \emph{not} reported as results (\cref{sec:lessons}). The
-authors are responsible for verifying all content. Every numerical result is
-generated by the released code, and every reference was checked against a
-bibliographic record (verification log in the repository).
+\section*{Declaration of generative AI and AI-assisted technologies in the writing process}
+During the preparation of this work the authors used OpenAI ChatGPT, Google
+Gemini and Anthropic Claude in order to search and verify the literature, write
+and test the research software, run and analyse the experiments, audit the two
+earlier design iterations and draft the manuscript; the final version was
+produced with substantial assistance from Anthropic Claude. After using these
+tools, the authors reviewed and edited the content as needed and take full
+responsibility for the content of the published article. Every numerical result
+is generated by the released code, findings of earlier iterations that rested
+on simulated participants are not reported as results (\cref{sec:lessons}), and
+every reference was checked against a bibliographic record (verification log in
+the repository).
 
-\bibliographystyle{plainnat}
+\bibliographystyle{elsarticle-harv}
 \bibliography{references}
 
 \appendix
@@ -1324,5 +1288,64 @@ bibliographic record (verification log in the repository).
 \includegraphics[width=0.5\linewidth]{figures/fig_roc.pdf}
 \caption{ROC of the risk score for injected versus benign side-effecting calls (held-out, template attack).}
 \end{figure}
+
+\section{Audit of earlier design iterations}
+\label{sec:lessons}
+\clear{} is the third iteration of this project. Its predecessors were built
+with different AI research assistants, and their artefacts are preserved in the
+repository. Auditing them yielded both design ideas and a methodological
+warning.
+
+\paragraph{What was adopted.} The first iteration (\emph{Trust Boundary Lab})
+framed the task as \emph{source-to-action review}. That framing became P2's
+excerpt display. It also proposed the factorial study design adopted in
+\cref{sec:study}. The second iteration (\emph{PROV-Guard}) proposed
+decoded-payload provenance, goal-drift scoring and counterfactual previews. Its
+decoding idea became decoding-aware lineage (P2, \cref{prop:launder}, E1), and
+its preview idea became P7 with \emph{computed} state differences. Goal drift
+was tested and rejected (H8).
+
+\paragraph{What was not adopted, and why.} PROV-Guard reported a 92.6\% attack
+success rate for binary confirmation dialogs, $d'=4.21$ and a 22.9\% NASA-TLX
+reduction for its framework, and $p$-values down to $10^{-16}$ with Cohen's
+$d\approx-49$. All of these came from a simulated user whose response to each
+interface feature was written into the code. For example, hiding provenance
+multiplied the ``cue clarity'' of an attack by 0.42. Re-running its own
+pipeline with only these per-feature multipliers set to neutral moves the
+ablation results substantially:
+
+\begin{center}\small
+\begin{tabular}{lcc}
+\toprule
+Condition (simulated ASR, \%) & as published & multipliers neutral \\
+\midrule
+full framework & \auditFullRep & \auditFullNeu \\
+without goal drift & \auditNoCgasdRep & \auditNoCgasdNeu \\
+without counterfactual preview & \auditNoIcspRep & \auditNoIcspNeu \\
+without provenance & \auditNoDlpaRep & \auditNoDlpaNeu \\
+binary modal & \auditModalRep & \auditModalNeu \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The component ranking is therefore an artefact of chosen constants. In that
+iteration, the ``Spotlighting'' baseline was a table of catch probabilities,
+and no defence had 100\% ASR by construction. Its benchmark is also separable
+by a single provenance rule (\cref{sec:v2method}). The first iteration had
+briefly scored risk with the ground-truth attack label before correcting
+itself.
+
+\paragraph{Reporting rules.} We derive four rules, which this paper follows.
+\begin{enumerate}[leftmargin=*,itemsep=1pt]
+\item Agent behaviour must come from recorded or live agents, and outcomes from
+  the benchmark's own predicates.
+\item Simulated humans may generate hypotheses but never results. Every
+  parameter is swept and every figure is labelled.
+\item Inferential statistics over simulated participants are not reported.
+\item Defences are evaluated blind to labels, and synthetic benchmarks are
+  checked for trivial separability before use.
+\end{enumerate}
+As AI assistants increasingly draft research artefacts, we believe such audits
+should become routine in security research that involves simulated users.
 
 \end{document}

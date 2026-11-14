@@ -1,0 +1,7 @@
+Highlights
+
+- Provenance-aware mediation decides when an AI agent must ask its user.
+- Conditional escalation floor: attacker text cannot lower external targets' tier.
+- Replay of 24,648 real agent trajectories: attack success 16.5% to 0.7%.
+- 51% fewer approval dialogs than confirming every side-effecting action.
+- Protection survives detector-evading phrasing and encoded (laundered) values.

@@ -20,18 +20,25 @@ Exclusions (pre-registered): no consent; fewer than all 16 tasks logged (technic
 failure); both attention checks failed; tasks completed in under 4 minutes; the
 condition in the browser differs from the server's assignment.
 
-Confirmatory tests
-  * H-U1, H-U2: logistic GEE (exchangeable working correlation, clusters = participants)
-    prevented ~ selective * evidence + C(scenario), effect-coded factors (+-0.5), so
-    exp(beta) is the odds ratio between factor levels. Holm correction over the two
-    main effects. Robustness: exact-in-the-limit permutation test (10,000 permutations)
-    of each main effect on participant-level prevention rates, which stays valid
-    when a condition prevents every attack (separation).
-  * Robustness: the GEE repeated (i) without participants who failed either attention
-    check and (ii) without each participant's first attacked task in presentation order.
-  * H-U3: non-inferiority of full CLEAR (A) to confirm-all (B): benign completion,
-    lower bound of the 90% CI of A - B above -5 pp; NASA-TLX, upper bound of the 90% CI
-    of A - B below +8 points (Welch).
+Confirmatory tests, in a fixed sequence (each is confirmatory only if all earlier ones
+are supported; this controls the familywise error at alpha = .05 without adjustment).
+The design was revised before data collection after the power analysis
+(docs/user_study/power_analysis.md):
+  1. H-U2, evidence improves prevention: logistic GEE (exchangeable working correlation,
+     clusters = participants) prevented ~ selective * evidence + C(scenario), effect-coded
+     factors (+-0.5), so exp(beta) is the odds ratio between factor levels; two-sided p < .05
+     with odds ratio > 1.
+  2. H-U1, selectivity does not reduce prevention: participant-level prevention rate,
+     selective (A, C) minus non-selective (B, D); non-inferior if the lower bound of the
+     90% CI (Welch) is above -10 percentage points.
+  3. H-U3a, benign completion of full CLEAR (A) is non-inferior to confirm-all (B):
+     lower bound of the 90% CI of A - B above -5 percentage points.
+  4. H-U3b, workload of A is non-inferior to B: upper bound of the 90% CI of the NASA-TLX
+     difference A - B below +8 points.
+Exploratory and robustness: the selectivity superiority effect and the interaction from
+the GEE; a stratified permutation test of both main effects on participant-level
+prevention rates (valid under separation); the GEE repeated without participants who
+failed either attention check and without each participant's first attacked task.
 """
 from __future__ import annotations
 
@@ -53,8 +60,10 @@ LABEL = {"clear": "A full CLEAR", "confirm_all": "B confirm-all", "clear_generic
          "confirm_all_evidence": "D evidence only"}
 PILOT_PREFIXES = ("PILOT", "TEST")
 MIN_MINUTES = 4.0
+NI_MARGIN_SELECTIVITY = 0.10
 NI_MARGIN_BENIGN = 0.05
 NI_MARGIN_TLX = 8.0
+ALPHA = 0.05
 
 
 def holm(pvals: list[float]) -> list[float]:
@@ -199,19 +208,15 @@ def gee_main_effects(trials: pd.DataFrame) -> pd.DataFrame:
         res = smf.gee("prevented ~ sel * ev + C(scenario)", groups="pid", data=d,
                       family=sm.families.Binomial(), cov_struct=sm.cov_struct.Exchangeable()).fit()
         ci = res.conf_int()
-        for term, name in (("sel", "selectivity (H-U1)"), ("ev", "evidence (H-U2)"), ("sel:ev", "interaction (exploratory)")):
+        for term, name in (("sel", "selectivity"), ("ev", "evidence"), ("sel:ev", "interaction")):
             rows.append({"effect": name, "odds_ratio": float(np.exp(res.params[term])),
                          "ci_lo": float(np.exp(ci.loc[term, 0])), "ci_hi": float(np.exp(ci.loc[term, 1])),
                          "z": float(res.tvalues[term]), "p": float(res.pvalues[term])})
     except Exception as exc:  # e.g. perfect separation; the permutation test still applies
         rows = [{"effect": n, "odds_ratio": np.nan, "ci_lo": np.nan, "ci_hi": np.nan, "z": np.nan, "p": np.nan,
                  "note": f"GEE not estimable: {exc.__class__.__name__}"}
-                for n in ("selectivity (H-U1)", "evidence (H-U2)", "interaction (exploratory)")]
-    out = pd.DataFrame(rows)
-    main = out.effect.str.contains("H-U")
-    if out.loc[main, "p"].notna().all():
-        out.loc[main, "p_holm"] = holm(out.loc[main, "p"].tolist())
-    return out
+                for n in ("selectivity", "evidence", "interaction")]
+    return pd.DataFrame(rows)
 
 
 def permutation_main_effects(parts: pd.DataFrame, n_perm: int = 10_000, seed: int = 20261109) -> pd.DataFrame:
@@ -220,7 +225,7 @@ def permutation_main_effects(parts: pd.DataFrame, n_perm: int = 10_000, seed: in
     d = parts.dropna(subset=["prevention_rate"]).reset_index(drop=True)
     y = d.prevention_rate.to_numpy()
     rows = []
-    for idx, name in ((0, "selectivity (H-U1)"), (1, "evidence (H-U2)")):
+    for idx, name in ((0, "selectivity"), (1, "evidence")):
         lab = d.condition.map(lambda c: CONDITIONS[c][idx]).to_numpy()
         obs = y[lab == 1].mean() - y[lab == 0].mean()
         strata = d.stratum.fillna("all").to_numpy()
@@ -237,24 +242,50 @@ def permutation_main_effects(parts: pd.DataFrame, n_perm: int = 10_000, seed: in
     return out
 
 
-def noninferiority(parts: pd.DataFrame) -> pd.DataFrame:
+def welch_noninferiority(x, y, margin: float, worse: str) -> dict:
+    """x - y with a 90% Welch CI. worse="lower": non-inferior if the lower bound > -margin;
+    worse="higher": non-inferior if the upper bound < +margin. p is the one-sided test of the margin."""
+    x, y = np.asarray(x, float), np.asarray(y, float)
+    x, y = x[~np.isnan(x)], y[~np.isnan(y)]
+    if len(x) < 2 or len(y) < 2:
+        return {"diff": np.nan, "ci90_lo": np.nan, "ci90_hi": np.nan, "p": np.nan, "supported": False,
+                "note": "too few participants"}
+    diff = x.mean() - y.mean()
+    vx, vy = x.var(ddof=1) / len(x), y.var(ddof=1) / len(y)
+    se = np.sqrt(vx + vy)
+    if se == 0:
+        ok = diff > -margin if worse == "lower" else diff < margin
+        return {"diff": diff, "ci90_lo": diff, "ci90_hi": diff, "p": 0.0 if ok else 1.0, "supported": bool(ok)}
+    df = (vx + vy) ** 2 / (vx ** 2 / (len(x) - 1) + vy ** 2 / (len(y) - 1))
+    tcrit = stats.t.ppf(0.95, df)
+    lo, hi = diff - tcrit * se, diff + tcrit * se
+    t = (diff + margin) / se if worse == "lower" else (margin - diff) / se
+    return {"diff": diff, "ci90_lo": lo, "ci90_hi": hi, "p": float(stats.t.sf(t, df)),
+            "supported": bool(lo > -margin if worse == "lower" else hi < margin)}
+
+
+def confirmatory(parts: pd.DataFrame, trials: pd.DataFrame, gee: pd.DataFrame | None = None) -> pd.DataFrame:
+    """The four confirmatory tests in their fixed sequence (see module docstring)."""
+    gee = gee_main_effects(trials) if gee is None else gee
+    ev = gee.set_index("effect").loc["evidence"]
+    sel = parts.condition.map(lambda c: CONDITIONS[c][0])
     a, b = parts[parts.condition == "clear"], parts[parts.condition == "confirm_all"]
-    rows = []
-    for col, margin, worse in (("benign_completion", NI_MARGIN_BENIGN, "lower"), ("tlx_raw", NI_MARGIN_TLX, "higher")):
-        x, y = a[col].dropna().to_numpy(float), b[col].dropna().to_numpy(float)
-        if len(x) < 2 or len(y) < 2:
-            rows.append({"outcome": col, "note": "too few participants"})
-            continue
-        diff = x.mean() - y.mean()
-        vx, vy = x.var(ddof=1) / len(x), y.var(ddof=1) / len(y)
-        se = np.sqrt(vx + vy)
-        df = (vx + vy) ** 2 / (vx ** 2 / (len(x) - 1) + vy ** 2 / (len(y) - 1)) if se > 0 else np.inf
-        tcrit = stats.t.ppf(0.95, df) if np.isfinite(df) else stats.norm.ppf(0.95)
-        lo, hi = diff - tcrit * se, diff + tcrit * se
-        ok = lo > -margin if worse == "lower" else hi < margin
-        rows.append({"outcome": col, "A_minus_B": diff, "ci90_lo": lo, "ci90_hi": hi, "margin": margin,
-                     "non_inferior": bool(ok), "n_A": len(x), "n_B": len(y)})
-    return pd.DataFrame(rows)
+    rows = [{"hypothesis": "H-U2 evidence improves prevention", "estimate": ev.odds_ratio,
+             "ci_lo": ev.ci_lo, "ci_hi": ev.ci_hi, "p": ev.p, "criterion": "GEE odds ratio > 1, p < .05",
+             "supported": bool(ev.p < ALPHA and ev.odds_ratio > 1) if pd.notna(ev.p) else False}]
+    for name, x, y, margin, worse, crit in (
+            ("H-U1 selectivity does not reduce prevention", parts[sel == 1].prevention_rate,
+             parts[sel == 0].prevention_rate, NI_MARGIN_SELECTIVITY, "lower", "90% CI lower bound > -10 pp"),
+            ("H-U3a benign completion A non-inferior to B", a.benign_completion, b.benign_completion,
+             NI_MARGIN_BENIGN, "lower", "90% CI lower bound > -5 pp"),
+            ("H-U3b workload A non-inferior to B", a.tlx_raw, b.tlx_raw, NI_MARGIN_TLX, "higher",
+             "90% CI upper bound < +8 TLX points")):
+        r = welch_noninferiority(x, y, margin, worse)
+        rows.append({"hypothesis": name, "estimate": r["diff"], "ci_lo": r["ci90_lo"], "ci_hi": r["ci90_hi"],
+                     "p": r["p"], "criterion": crit, "supported": r["supported"]})
+    out = pd.DataFrame(rows)
+    out["confirmatory"] = out.supported.shift(1, fill_value=True).cummin().astype(bool)   # fixed-sequence gate
+    return out
 
 
 def main() -> None:
@@ -305,19 +336,19 @@ def main() -> None:
     if inc.condition.nunique() == len(CONDITIONS) and len(Ti):
         g = gee_main_effects(Ti)
         perm = permutation_main_effects(inc)
-        ni = noninferiority(inc)
-        g.to_csv(out / "primary_gee.csv", index=False)
+        conf = confirmatory(inc, Ti, g)
+        conf.to_csv(out / "confirmatory.csv", index=False)
+        g.to_csv(out / "gee.csv", index=False)
         att_ok = inc[(inc.attention_n < 2) | (inc.attention_correct == inc.attention_n)].pid
         first = Ti[Ti.attacked].sort_values("position").groupby("pid").head(1).index
         rob = pd.concat([gee_main_effects(Ti[Ti.pid.isin(att_ok)]).assign(variant="passed both attention checks"),
                          gee_main_effects(Ti.drop(index=first)).assign(variant="first attacked task excluded")])
         rob.to_csv(out / "robustness_gee.csv", index=False)
         summary["robustness_gee"] = rob.to_dict(orient="records")
-        perm.to_csv(out / "primary_permutation.csv", index=False)
-        ni.to_csv(out / "noninferiority.csv", index=False)
-        summary.update({"primary_gee": g.to_dict(orient="records"), "primary_permutation": perm.to_dict(orient="records"),
-                        "noninferiority": ni.to_dict(orient="records")})
-        print(g.to_string(index=False)); print(perm.to_string(index=False)); print(ni.to_string(index=False))
+        perm.to_csv(out / "permutation.csv", index=False)
+        summary.update({"confirmatory": conf.to_dict(orient="records"), "gee": g.to_dict(orient="records"),
+                        "permutation": perm.to_dict(orient="records")})
+        print(conf.to_string(index=False)); print(g.to_string(index=False)); print(perm.to_string(index=False))
     else:
         summary["note"] = "confirmatory tests need included participants in all four conditions"
     (out / "summary.json").write_text(json.dumps(summary, indent=1, default=float))

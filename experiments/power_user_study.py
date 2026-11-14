@@ -1,17 +1,23 @@
 """Simulation-based power analysis for the lab user study (protocol section 4).
 
-Every simulated study is analysed with the pre-registered primary analysis itself
-(experiments/analyze_user_study.gee_main_effects: logistic GEE clustered by
-participant, scenario as a fixed effect, Holm over the two main effects). Power is
-the share of simulated studies in which a main effect has Holm-adjusted p < .05.
-A fit that fails (for example under separation) counts as a non-rejection.
+Every simulated study is analysed with the analysis code of the study itself
+(experiments/analyze_user_study.py). Power is the share of simulated studies in which
+a test succeeds; a fit that fails (for example under separation) counts as a failure.
+Two designs are evaluated on the same simulated studies:
+
+* original design: superiority of both main effects, Holm-adjusted GEE p < .05
+  (columns power_selectivity, power_evidence, power_both);
+* revised design (adopted, protocol section 7): fixed sequence of H-U2, evidence
+  superiority (GEE p < .05, odds ratio > 1), then H-U1, selectivity non-inferiority on
+  participant-level prevention (90% CI lower bound > -10 pp)
+  (columns power_ev_primary, power_sel_ni, power_sequence).
 
 Two data-generating models:
 
 1. Assumption grid (model-free). For participant i and attacked scenario j,
        logit P(prevented) = b0 + b_s * sel_i + b_e * ev_i + u_i + v_j,
    with effect-coded sel, ev in {-0.5, +0.5}, so exp(b_s) and exp(b_e) are the
-   odds ratios between factor levels; u_i ~ N(0, sigma_u^2) (between-participant
+   odds ratios between factor levels (equal unless --sel-odds-ratio is given); u_i ~ N(0, sigma_u^2) (between-participant
    variation) and v_j ~ N(0, sigma_v^2) (scenario difficulty, redrawn per study).
    b0 is set so that a typical participant (u = 0) in confirm-all (B) prevents an
    attack with probability `baseline`. The interaction is zero.
@@ -48,7 +54,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from clear.human_model import SimulatedUser  # noqa: E402
-from experiments.analyze_user_study import CONDITIONS, gee_main_effects  # noqa: E402
+from experiments.analyze_user_study import (CONDITIONS, NI_MARGIN_SELECTIVITY, gee_main_effects,  # noqa: E402
+                                            holm, welch_noninferiority)
 from experiments.human_sim import draw_user  # noqa: E402
 
 STATIC = ROOT / "clear" / "ui" / "static"
@@ -58,15 +65,30 @@ ALPHA = 0.05
 EXCLUSION_ALLOWANCE = 0.10
 
 
-def analyse(trials: pd.DataFrame) -> tuple[bool, bool, bool]:
-    """Pre-registered primary analysis; returns (selectivity rejected, evidence rejected, fit ok)."""
+OUTCOMES = ("holm_sel", "holm_ev", "ev_primary", "sel_ni", "fit_ok")
+
+
+def analyse(trials: pd.DataFrame) -> tuple[bool, ...]:
+    """Both designs on one simulated study; returns the flags named in OUTCOMES."""
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        res = gee_main_effects(trials)
-    if "p_holm" not in res or res.p_holm.isna().all():
-        return False, False, False
-    p = dict(zip(res.effect, res.p_holm))
-    return bool(p["selectivity (H-U1)"] < ALPHA), bool(p["evidence (H-U2)"] < ALPHA), True
+        res = gee_main_effects(trials).set_index("effect")
+    if res.p.isna().any():
+        return (False,) * len(OUTCOMES)
+    ph = dict(zip(("selectivity", "evidence"), holm([res.p["selectivity"], res.p["evidence"]])))
+    rate = trials.groupby(["pid", "condition"]).prevented.mean().reset_index()
+    sel = rate.condition.map(lambda c: CONDITIONS[c][0])
+    ni = welch_noninferiority(rate.prevented[sel == 1], rate.prevented[sel == 0], NI_MARGIN_SELECTIVITY, "lower")
+    return (bool(ph["selectivity"] < ALPHA), bool(ph["evidence"] < ALPHA),
+            bool(res.p["evidence"] < ALPHA and res.odds_ratio["evidence"] > 1), bool(ni["supported"]), True)
+
+
+def _power(hits: np.ndarray) -> dict:
+    h = dict(zip(OUTCOMES, hits.T))
+    return {"power_selectivity": h["holm_sel"].mean(), "power_evidence": h["holm_ev"].mean(),
+            "power_both": (h["holm_sel"] & h["holm_ev"]).mean(),
+            "power_ev_primary": h["ev_primary"].mean(), "power_sel_ni": h["sel_ni"].mean(),
+            "power_sequence": (h["ev_primary"] & h["sel_ni"]).mean(), "fit_failures": 1 - h["fit_ok"].mean()}
 
 
 def _logit(p: float) -> float:
@@ -74,34 +96,35 @@ def _logit(p: float) -> float:
 
 
 def grid_study(n: int, baseline: float, odds_ratio: float, sigma_u: float, sigma_v: float,
-               rng: np.random.Generator) -> pd.DataFrame:
+               rng: np.random.Generator, sel_odds_ratio: float | None = None) -> pd.DataFrame:
     b = math.log(odds_ratio)
-    b0 = _logit(baseline) + b / 2 + b / 2          # B sits at sel = ev = -0.5
+    bs = b if sel_odds_ratio is None else math.log(sel_odds_ratio)
+    b0 = _logit(baseline) + bs / 2 + b / 2         # B sits at sel = ev = -0.5
     v = rng.normal(0, sigma_v, len(ATTACKED))
     rows = []
     for cond, (s, e) in CONDITIONS.items():
         for i in range(n):
             u = rng.normal(0, sigma_u)
             for j, sid in enumerate(ATTACKED):
-                lp = b0 + b * (s - 0.5) + b * (e - 0.5) + u + v[j]
+                lp = b0 + bs * (s - 0.5) + b * (e - 0.5) + u + v[j]
                 rows.append((f"{cond}-{i}", cond, sid, int(rng.random() < 1 / (1 + math.exp(-lp)))))
     return pd.DataFrame(rows, columns=["pid", "condition", "scenario", "prevented"]).assign(attacked=True)
 
 
 def _grid_cell(args) -> dict:
-    n, baseline, odds_ratio, sigma_u, sigma_v, sims, seed = args
+    n, baseline, odds_ratio, sigma_u, sigma_v, sims, seed, *rest = args
+    sel_or = rest[0] if rest else None
     rng = np.random.default_rng(seed)
-    hits = np.zeros((sims, 3), dtype=bool)
+    hits = np.zeros((sims, len(OUTCOMES)), dtype=bool)
     rates = []
     for k in range(sims):
-        d = grid_study(n, baseline, odds_ratio, sigma_u, sigma_v, rng)
+        d = grid_study(n, baseline, odds_ratio, sigma_u, sigma_v, rng, sel_or)
         hits[k] = analyse(d)
         rates.append(d.groupby("condition").prevented.mean())
     r = pd.concat(rates, axis=1).mean(axis=1)
-    return {"n_per_cell": n, "baseline_B": baseline, "odds_ratio": odds_ratio, "sigma_u": sigma_u,
-            "sigma_v": sigma_v, "sims": sims,
-            "power_selectivity": hits[:, 0].mean(), "power_evidence": hits[:, 1].mean(),
-            "power_both": (hits[:, 0] & hits[:, 1]).mean(), "fit_failures": 1 - hits[:, 2].mean(),
+    return {"n_per_cell": n, "baseline_B": baseline, "odds_ratio": odds_ratio,
+            "sel_odds_ratio": odds_ratio if sel_or is None else sel_or, "sigma_u": sigma_u,
+            "sigma_v": sigma_v, "sims": sims, **_power(hits),
             **{f"mean_prevention_{c}": float(r[c]) for c in CONDITIONS}}
 
 
@@ -178,7 +201,7 @@ def _model_cell(args) -> dict:
     n, mix_name, mix, extra, source, sims, seed = args
     practice, tasks = _schedule()
     rng = random.Random(seed)
-    hits = np.zeros((sims, 3), dtype=bool)
+    hits = np.zeros((sims, len(OUTCOMES)), dtype=bool)
     rates = []
     for k in range(sims):
         rows = []
@@ -190,18 +213,17 @@ def _model_cell(args) -> dict:
         rates.append(d.groupby("condition").prevented.mean())
     r = pd.concat(rates, axis=1).mean(axis=1)
     return {"population": mix_name, "benign_tasks": source, "session_tasks": len(tasks) + extra,
-            "n_per_cell": n, "sims": sims,
-            "power_selectivity": hits[:, 0].mean(), "power_evidence": hits[:, 1].mean(),
-            "power_both": (hits[:, 0] & hits[:, 1]).mean(), "fit_failures": 1 - hits[:, 2].mean(),
+            "n_per_cell": n, "sims": sims, **_power(hits),
             **{f"mean_prevention_{c}": float(r[c]) for c in CONDITIONS}}
 
 
-def recommend(grid: pd.DataFrame, target: float) -> pd.DataFrame:
+def recommend(grid: pd.DataFrame, target: float, metric: str) -> pd.DataFrame:
     rows = []
-    for key, g in grid.groupby(["baseline_B", "odds_ratio", "sigma_u"]):
-        ok = g[g.power_both >= target].n_per_cell
+    for key, g in grid.groupby(["baseline_B", "odds_ratio", "sel_odds_ratio", "sigma_u"]):
+        ok = g[g[metric] >= target].n_per_cell
         n = int(ok.min()) if len(ok) else None
-        rows.append({"baseline_B": key[0], "odds_ratio": key[1], "sigma_u": key[2],
+        rows.append({"baseline_B": key[0], "evidence_odds_ratio": key[1], "sel_odds_ratio": key[2],
+                     "sigma_u": key[3], "power_metric": metric,
                      "min_analysed_per_cell": n,
                      "recruit_per_cell": math.ceil(n / (1 - EXCLUSION_ALLOWANCE)) if n else None})
     return pd.DataFrame(rows)
@@ -213,7 +235,11 @@ def main() -> None:
     ap.add_argument("--baseline", type=float, nargs="+", default=[0.3, 0.5, 0.7],
                     help="prevention probability of a typical participant in confirm-all (B)")
     ap.add_argument("--odds-ratio", type=float, nargs="+", default=[1.5, 2.0, 2.5],
-                    help="odds ratio of each main effect (selectivity and evidence)")
+                    help="odds ratio of the evidence effect (and of selectivity unless --sel-odds-ratio is given)")
+    ap.add_argument("--sel-odds-ratio", type=float, nargs="+", default=None,
+                    help="odds ratio of the selectivity effect; 1.0 = no benefit (the non-inferiority case)")
+    ap.add_argument("--design", choices=["revised", "original"], default="revised",
+                    help="which design the sample-size recommendation targets")
     ap.add_argument("--sigma-u", type=float, nargs="+", default=[0.5, 1.0, 1.5],
                     help="between-participant SD on the logit scale")
     ap.add_argument("--sigma-v", type=float, default=0.5, help="scenario SD on the logit scale")
@@ -233,8 +259,9 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    cells = list(product(args.n_per_cell, args.baseline, args.odds_ratio, args.sigma_u))
-    jobs = [(n, b, o, s, args.sigma_v, args.sims, args.seed + i) for i, (n, b, o, s) in enumerate(cells)]
+    sel_ors = args.sel_odds_ratio or [None]
+    cells = list(product(args.n_per_cell, args.baseline, args.odds_ratio, args.sigma_u, sel_ors))
+    jobs = [(n, b, o, s, args.sigma_v, args.sims, args.seed + i, so) for i, (n, b, o, s, so) in enumerate(cells)]
     mixes = {"balanced": {"novice": 1 / 3, "intermediate": 1 / 3, "security_aware": 1 / 3},
              "mostly_novice": {"novice": 0.6, "intermediate": 0.3, "security_aware": 0.1}}
     mjobs = [(n, name, mix, extra, src, args.model_sims, args.seed + 10_000 + i)
@@ -246,7 +273,7 @@ def main() -> None:
     rec = pd.DataFrame()
     if len(grid):
         grid.to_csv(out / "power_grid.csv", index=False)
-        rec = recommend(grid, args.target)
+        rec = recommend(grid, args.target, "power_sequence" if args.design == "revised" else "power_both")
         rec.to_csv(out / "power_recommendation.csv", index=False)
     if len(model):
         name = ("power_model_anchored.csv" if args.extra_benign == [0] and args.benign_source == ["study"]

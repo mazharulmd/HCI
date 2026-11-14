@@ -152,12 +152,15 @@ def test_analysis_runs_on_synthetic_logs(tmp_path):
                       for sid, k in key.items() if k["attacked"] and not k.get("practice")])
     assert trials[(trials.pid == "S001") & trials.attacked].prevented.mean() == pytest.approx(expect)
     summary = json.loads((out / "summary.json").read_text())
-    gee = {r["effect"]: r for r in summary["primary_gee"]}
+    gee = {r["effect"]: r for r in summary["gee"]}
     # the synthetic users deny injected calls more often with selectivity and with evidence
-    assert gee["selectivity (H-U1)"]["odds_ratio"] > 1 and gee["evidence (H-U2)"]["odds_ratio"] > 1
-    assert all(np.isfinite(gee[e]["p_holm"]) for e in ("selectivity (H-U1)", "evidence (H-U2)"))
-    assert all(0 < r["p_perm"] <= 1 for r in summary["primary_permutation"])
-    assert len(summary["noninferiority"]) == 2
+    assert gee["selectivity"]["odds_ratio"] > 1 and gee["evidence"]["odds_ratio"] > 1
+    assert all(np.isfinite(gee[e]["p"]) for e in ("selectivity", "evidence"))
+    assert all(0 < r["p_perm"] <= 1 for r in summary["permutation"])
+    conf = summary["confirmatory"]
+    assert [r["hypothesis"][:5] for r in conf] == ["H-U2 ", "H-U1 ", "H-U3a", "H-U3b"]
+    # planted effects: evidence superior, selectivity not worse; the gate opens in sequence
+    assert conf[0]["supported"] and conf[1]["supported"] and conf[1]["confirmatory"]
     assert {r["variant"] for r in summary["robustness_gee"]} == {"passed both attention checks",
                                                                  "first attacked task excluded"}
 
@@ -168,8 +171,22 @@ def test_power_simulation_calibration():
     null = pw._grid_cell((40, 0.5, 1.0, 1.0, 0.5, 60, 1))
     big = pw._grid_cell((60, 0.5, 4.0, 0.5, 0.5, 30, 2))
     assert null["power_selectivity"] <= 0.15 and null["power_evidence"] <= 0.15
-    assert big["power_both"] >= 0.8
+    assert big["power_both"] >= 0.8 and big["power_sequence"] >= 0.8
+    # selectivity exactly at the non-inferiority margin (B 0.5 -> about 0.4) is rarely declared non-inferior
+    at_margin = pw._grid_cell((60, 0.5, 4.0, 0.5, 0.5, 40, 3, 0.66))
+    assert at_margin["power_sel_ni"] <= 0.15
     rng = __import__("random").Random(0)
     practice, tasks = pw._schedule()
     rows = pw.model_participant("clear", practice, tasks, rng, {"intermediate": 1.0})
     assert sorted(r[1] for r in rows) == sorted(pw.ATTACKED)
+
+
+def test_fixed_sequence_gate_and_noninferiority():
+    from experiments.analyze_user_study import welch_noninferiority
+    # a clearly worse group fails a 10-point margin; an equal group passes it
+    rng = np.random.default_rng(1)
+    same = welch_noninferiority(rng.normal(0.8, 0.1, 200), rng.normal(0.8, 0.1, 200), 0.10, "lower")
+    worse = welch_noninferiority(rng.normal(0.6, 0.1, 200), rng.normal(0.8, 0.1, 200), 0.10, "lower")
+    assert same["supported"] and same["p"] < 0.05 and not worse["supported"] and worse["p"] > 0.5
+    gate = pd.Series([True, False, True, True]).shift(1, fill_value=True).cummin().astype(bool)
+    assert gate.tolist() == [True, True, False, False]
