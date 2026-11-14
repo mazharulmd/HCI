@@ -1063,7 +1063,7 @@ H2 & Fewer dialogs per benign task than confirm-all & Supported in trace replay 
 H3 & Fail-closed BU above confirm-all-deny; no BU loss with ideal user & Supported (\buClearA{} vs.\ \buCallA\%; \buClearO{} = no defence) \\
 H4 & Removing provenance raises ASR; removing $\iota$ costs little; lexical detection fails under evasion & Supported (\cref{tab:ablation}, \cref{fig:curves}) \\
 H5 & Lower end-to-end ASR than confirm-all for fallible users & Supported \emph{in simulation only} (\simShare\% of grid) \\
-H6 & Provenance raises users' $d'$ without raising workload & \emph{Untested} (user study pending) \\
+H6 & With real users, evidence raises prevention, selectivity does not lower it, and burden is not higher (H-U1--H-U3) & \emph{Untested}: proposed study (\cref{sec:study}) \\
 H7 & Decoding-aware lineage defeats value laundering at no cost on ordinary traffic & Supported for the five value encodings (\laundVtwoVal\% vs.\ \laundVoneMin--\laundVoneMax\%); partly for whole-block encoding: frozen v2 removes about three quarters of the gap; the post-hoc v2.1 closes it (\cref{tab:launder}) \\
 H8 & Goal-drift scoring adds security beyond provenance and envelope & \emph{Not supported}: +22\% dialogs on development data, no ASR gain; rejected \\
 \bottomrule
@@ -1094,25 +1094,31 @@ checks are embedded. Every escalated action carries the computed consequence pre
 of benign tasks, per task. \textbf{Secondary outcomes}: per-dialog
 accuracy, SDT $d'$ and $c$, decision time, SUS~\citep{brooke1996sus}, raw
 NASA-TLX~\citep{hart1988nasatlx}, and trust in automation~\citep{jian2000trust}.
-\textbf{Analysis}: a logistic GEE clustered by participant
-(\texttt{prevented $\sim$ selective $\times$ evidence + scenario}), testing the
-two main effects with Holm correction. With only four attacked scenarios, a
-scenario random effect would be poorly identified, so scenario enters as a
-fixed effect. A stratified permutation test of the main effects on
-participant-level prevention rates serves as a robustness check that remains
-valid under separation. Non-inferiority tests cover benign completion and
-workload (A vs.\ B). The analysis script was written before data collection
-and tested on synthetic logs only.
-\textbf{Sample-size planning}: $N=220$ (55 per cell) is a provisional
-recruitment target. A simulation-based power analysis that runs the primary
-analysis on simulated studies (repository) gives power of at least .80 for both
-main effects if each is an odds ratio of 2 or more and between-participant
-variation is moderate. Under our own simulated-user model, the evidence effect is
-large and well powered, whereas the selectivity effect on prevention is small
-(4--6 percentage points) and would not be adequately powered by any feasible
-sample; selectivity mainly reduces burden. Whether selectivity remains a
-confirmatory prevention hypothesis will be settled before preregistration, and the
-power analysis will be re-run with pilot estimates. The interaction is exploratory.
+\textbf{Hypotheses and analysis}: the confirmatory tests run in a fixed
+sequence, each at $\alpha=.05$, which controls the familywise error without
+further adjustment. First, evidence increases prevention (H-U2), tested with a
+logistic GEE clustered by participant
+(\texttt{prevented $\sim$ selective $\times$ evidence + scenario}); with only four
+attacked scenarios, a scenario random effect would be poorly identified, so
+scenario enters as a fixed effect. Second, selectivity does not reduce prevention
+by more than 10 percentage points (H-U1, non-inferiority on participant-level
+rates). Third and fourth, full \clear{} is non-inferior to confirm-all in
+benign-task completion (margin 5 points) and NASA-TLX workload (margin 8 points)
+(H-U3). Selectivity is tested for non-inferiority rather than superiority
+because, under our own user model, its effect on prevention is small (4--6
+percentage points) and could not be powered at any feasible sample; its expected
+benefit is lower burden, which H-U3 covers. A stratified permutation test of the
+main effects is a robustness check that remains valid under separation. The
+analysis script was written before data collection and tested on synthetic logs
+only.
+\textbf{Sample size}: a simulation-based power analysis runs this analysis on
+400 simulated studies per setting, assuming that selectivity brings no benefit
+at all. With 89 participants recruited per cell ($N=356$), power for the
+sequence of H-U2 and H-U1 is at least .87 whenever the evidence effect is an
+odds ratio of 2 or more and between-participant variation is moderate; under our
+user model it is 1.00. With 55 per cell ($N=220$) it is .97--.99 under the model
+but only .64--.74 in the model-free moderate case. The power analysis will be
+re-run with pilot estimates before recruitment. The interaction is exploratory.
 The apparatus covers the whole session in the browser (consent, demographics,
 practice, tasks, attention checks, questionnaire and debriefing) and logs every
 decision, response time, forcing answer, envelope edit and undo. It was

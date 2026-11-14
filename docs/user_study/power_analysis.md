@@ -1,6 +1,8 @@
 # Power analysis for the lab study
 
 **Status:** done before recruitment, with **simulated** studies only. No participant data exist.
+The first part evaluates the original design; it led to the revised design that the
+protocol now uses (section "Revised design (adopted)" at the end).
 
 * Script: `experiments/power_user_study.py`
 * Results: `results/power/`
@@ -132,7 +134,7 @@ A representative task set helps more than a longer session. Even so, under this 
 no feasible design reaches 80% power for selectivity *on the prevention outcome*: the
 model predicts a gain of 4–6 percentage points.
 
-## Conclusions for the protocol
+## Conclusions for the original design
 
 1. **N = 220 (55 per cell) is adequate for the evidence effect (H-U2)** under the
    paper's model. It is also adequate for any main effect of odds ratio 2 or more with
@@ -141,7 +143,7 @@ model predicts a gain of 4–6 percentage points.
    if the paper's model is right, and no feasible sample size or session length fixes
    that. Under the model, selectivity mainly reduces *burden* (fewer dialogs, less
    workload) while keeping prevention. That is a different, testable claim.
-3. **A decision is needed before preregistration.** Options:
+3. **Decision taken before preregistration: option (b)**, the revised design below. Options considered:
    * **(a)** Keep H-U1 as confirmatory and accept low power. Not recommended: a null
      result would be uninformative.
    * **(b)** Demote H-U1 to exploratory. Make H-U2 (evidence) the primary confirmatory
@@ -153,3 +155,90 @@ model predicts a gain of 4–6 percentage points.
 4. **After the pilot sessions**, re-run the grid with the observed prevention rate in
    confirm-all and an estimate of σ_u, for example:
    `python experiments/power_user_study.py --baseline 0.45 --sigma-u 1.2 --skip-model`.
+
+## Revised design (adopted)
+
+Because selectivity could not be powered as a superiority hypothesis, the
+hypotheses were revised before any data collection (protocol sections 2 and 7).
+The confirmatory tests now run in a fixed sequence: **H-U2**, evidence improves
+prevention (GEE odds ratio > 1, p < .05), then **H-U1**, selectivity does not reduce
+prevention by more than 10 percentage points (non-inferiority on participant-level
+rates), then the two cost hypotheses H-U3a and H-U3b. The simulations below report
+power for the first two steps together (`power_sequence`). The cost hypotheses
+depend on workload and completion data that the simulations do not model.
+
+Results: `results/power/revised/`. Settings: 400 simulated studies per cell.
+**Selectivity is assumed to bring no benefit at all** (odds ratio 1.0), which is the
+hardest case for the non-inferiority test. A calibration test checks that the
+non-inferiority test rarely passes when selectivity is truly 10 points worse.
+
+### Model-anchored (simulation, not human data)
+
+Power for the sequence H-U2 then H-U1, under the paper's own user model:
+
+| population | n = 30 | n = 40 | n = 50 | n = 60 | n = 80 | n = 100 |
+|---|---|---|---|---|---|---|
+| balanced | 0.83 | 0.93 | 0.97 | 0.99 | 1.00 | 1.00 |
+| mostly novice | 0.85 | 0.96 | 0.99 | 0.99 | 1.00 | 1.00 |
+
+### Assumption grid: power for the sequence, evidence odds ratio 2.0
+
+| baseline_B | sigma_u | n = 30 | n = 40 | n = 50 | n = 60 | n = 80 | n = 100 |
+|---|---|---|---|---|---|---|---|
+| 0.3 | 0.5 | 0.62 | 0.77 | 0.87 | 0.90 | 0.96 | 0.99 |
+| 0.3 | 1.0 | 0.41 | 0.59 | 0.72 | 0.78 | 0.89 | 0.95 |
+| 0.3 | 1.5 | 0.24 | 0.40 | 0.46 | 0.59 | 0.72 | 0.88 |
+| 0.5 | 0.5 | 0.58 | 0.78 | 0.82 | 0.89 | 0.95 | 0.97 |
+| 0.5 | 1.0 | 0.39 | 0.50 | 0.64 | 0.80 | 0.87 | 0.95 |
+| 0.5 | 1.5 | 0.26 | 0.37 | 0.48 | 0.59 | 0.76 | 0.82 |
+| 0.7 | 0.5 | 0.65 | 0.80 | 0.89 | 0.93 | 0.98 | 0.99 |
+| 0.7 | 1.0 | 0.42 | 0.54 | 0.73 | 0.82 | 0.94 | 0.98 |
+| 0.7 | 1.5 | 0.27 | 0.40 | 0.54 | 0.59 | 0.77 | 0.86 |
+
+### Assumption grid: power for the sequence, evidence odds ratio 1.5
+
+| baseline_B | sigma_u | n = 30 | n = 40 | n = 50 | n = 60 | n = 80 | n = 100 |
+|---|---|---|---|---|---|---|---|
+| 0.3 | 0.5 | 0.33 | 0.46 | 0.52 | 0.70 | 0.83 | 0.92 |
+| 0.3 | 1.0 | 0.18 | 0.30 | 0.38 | 0.46 | 0.64 | 0.71 |
+| 0.3 | 1.5 | 0.13 | 0.16 | 0.19 | 0.30 | 0.37 | 0.49 |
+| 0.5 | 0.5 | 0.37 | 0.47 | 0.56 | 0.68 | 0.82 | 0.91 |
+| 0.5 | 1.0 | 0.17 | 0.28 | 0.37 | 0.48 | 0.60 | 0.74 |
+| 0.5 | 1.5 | 0.11 | 0.16 | 0.20 | 0.21 | 0.35 | 0.47 |
+| 0.7 | 0.5 | 0.32 | 0.43 | 0.58 | 0.64 | 0.75 | 0.89 |
+| 0.7 | 1.0 | 0.21 | 0.32 | 0.28 | 0.42 | 0.60 | 0.72 |
+| 0.7 | 1.5 | 0.09 | 0.14 | 0.21 | 0.26 | 0.41 | 0.47 |
+
+### Assumption grid: power for the sequence, evidence odds ratio 2.5
+
+| baseline_B | sigma_u | n = 30 | n = 40 | n = 50 | n = 60 | n = 80 | n = 100 |
+|---|---|---|---|---|---|---|---|
+| 0.3 | 0.5 | 0.62 | 0.72 | 0.85 | 0.89 | 0.94 | 0.98 |
+| 0.3 | 1.0 | 0.48 | 0.64 | 0.78 | 0.84 | 0.92 | 0.96 |
+| 0.3 | 1.5 | 0.34 | 0.50 | 0.67 | 0.71 | 0.84 | 0.92 |
+| 0.5 | 0.5 | 0.63 | 0.77 | 0.83 | 0.89 | 0.97 | 0.99 |
+| 0.5 | 1.0 | 0.54 | 0.67 | 0.77 | 0.87 | 0.92 | 0.96 |
+| 0.5 | 1.5 | 0.39 | 0.49 | 0.61 | 0.69 | 0.84 | 0.91 |
+| 0.7 | 0.5 | 0.72 | 0.87 | 0.94 | 0.94 | 0.99 | 1.00 |
+| 0.7 | 1.0 | 0.55 | 0.74 | 0.83 | 0.90 | 0.94 | 0.98 |
+| 0.7 | 1.5 | 0.40 | 0.52 | 0.66 | 0.74 | 0.88 | 0.95 |
+
+The bottleneck under the grid is the non-inferiority test when participants differ a
+lot; power for the evidence test alone is higher (`power_ev_primary` in
+`power_grid.csv`).
+
+### Sample-size decision
+
+* **Recommended: 89 recruited per cell (N = 356), about 80 analysed.** Under the
+  model-free grid, this gives power of at least .87 for the sequence whenever the
+  evidence effect is an odds ratio of 2 or more and participant variation is
+  moderate (σ_u ≤ 1), even if selectivity has no benefit. Under the paper's model it
+  gives power of 1.00.
+* **Minimum: 55 recruited per cell (N = 220), about 50 analysed.** Under the paper's
+  model, power is .97 (balanced population) to .99 (mostly novice). Under the
+  model-free grid with moderate variation it is only .64 to .74, so this size is
+  adequate only if the model is roughly right.
+* An evidence effect as small as an odds ratio of 1.5 cannot be detected reliably at
+  any size simulated here when participants vary moderately or more.
+* After the pilot sessions, re-run with the observed rates:
+  `python experiments/power_user_study.py --design revised --sel-odds-ratio 1.0 --baseline <observed B rate> --sigma-u <estimate> --skip-model --out results/power/pilot`.
