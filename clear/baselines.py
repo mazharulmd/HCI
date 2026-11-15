@@ -12,8 +12,9 @@
                   capability is outside the intent envelope.
 * InjectionDetector -- input-side detection: abort the episode as soon as an
                   untrusted tool output looks like an injected instruction
-                  (mirrors AgentDojo's `transformers_pi_detector`, which
-                  aborts the agent; here with CLEAR's lexical scorer).
+                  (the abort variant of AgentDojo's `transformers_pi_detector`,
+                  whose default instead redacts the flagged output; here with
+                  CLEAR's lexical scorer).
 
 Each baseline exposes ``decide(spec, assessment) -> str`` returning
 "allow" | "confirm" | "deny" so that the replay harness treats all

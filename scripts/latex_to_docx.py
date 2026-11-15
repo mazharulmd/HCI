@@ -9,7 +9,7 @@ figure and proposition numbers as the PDF. The script
   * replaces \\cref/\\Cref/\\ref with the numbers LaTeX assigned,
   * renders the TikZ architecture figure to PNG and uses PNG versions of figures,
   * turns the elsarticle front matter into plain title, abstract and keywords,
-  * formats citations with pandoc citeproc and the Elsevier Harvard CSL style.
+  * formats citations with pandoc citeproc and the APA CSL style (as IP&M).
 The PDF built by LaTeX remains the reference version of the manuscript.
 """
 from __future__ import annotations
@@ -24,7 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PAPER = ROOT / "paper"
-CSL_URL = "https://raw.githubusercontent.com/citation-style-language/styles/master/elsevier-harvard.csl"
+CSL_URL = "https://raw.githubusercontent.com/citation-style-language/styles/master/apa.csl"
 KIND = {"section": "Section", "subsection": "Section", "subsubsection": "Section", "table": "Table",
         "figure": "Figure", "proposition": "Proposition", "definition": "Definition", "equation": "Eq.",
         "appendix": "Appendix", "remark": "Remark", "enumi": "item"}
@@ -166,7 +166,7 @@ def main() -> None:
         tex = re.sub(r"\{figures/([\w-]+)\.pdf\}", lambda m: "{" + str(ROOT / "figures" / (m.group(1) + ".png")) + "}", tex)
         tex = re.sub(r"\{figures/([\w-]+\.png)\}", lambda m: "{" + str(ROOT / "figures" / m.group(1)) + "}", tex)
         (work / "flat.tex").write_text(tex)
-        csl = work / "elsevier-harvard.csl"
+        csl = work / "apa.csl"
         urllib.request.urlretrieve(CSL_URL, csl)
         shutil.copy(PAPER / "references.bib", work / "references.bib")
         subprocess.run(["pandoc", "flat.tex", "-f", "latex", "-t", "docx", "--citeproc",

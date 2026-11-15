@@ -1,0 +1,74 @@
+SemanticScholar perez2022ignore              1.0   arXiv.org 2022
+SemanticScholar greshake2023not              1.0   AISec@CCS 2023
+SemanticScholar liu2023houyi                 1.0   arXiv.org 2023
+SemanticScholar liu2024formalizing           1.0   USENIX Security Symposium 2023
+SemanticScholar zhan2024injecagent           1.0   Annual Meeting of the Association for Co 2024
+SemanticScholar debenedetti2024agentdojo     0.903 Neural Information Processing Systems 2024
+SemanticScholar yi2025bipia                  1.0   Knowledge Discovery and Data Mining 2023
+SemanticScholar zhang2025asb                 1.0   International Conference on Learning Rep 2024
+SemanticScholar zhan2025adaptive             1.0   North American Chapter of the Associatio 2025
+SemanticScholar abdelnabi2026always          1.0   arXiv.org 2026
+SemanticScholar ma2026autodojo               1.0    2026
+SemanticScholar hofer2026automated           1.0   arXiv.org 2026
+SemanticScholar chen2026autoinject           1.0   arXiv.org 2026
+SemanticScholar pandya2025attention          1.0   arXiv.org 2025
+SemanticScholar alizadeh2025simple           1.0   arXiv.org 2025
+SemanticScholar wang2026landscape            1.0   arXiv.org 2026
+SemanticScholar shaw2026silent               1.0   arXiv.org 2026
+SemanticScholar khan2026evaluating           1.0   Computers 2026
+SemanticScholar hines2024spotlighting        1.0   CAMLIS 2024
+SemanticScholar chen2025struq                1.0   USENIX Security Symposium 2024
+SemanticScholar chen2025secalign             1.0   Conference on Computer and Communication 2024
+SemanticScholar chen2025metasecalign         1.0    2025
+SemanticScholar wallace2024instruction       1.0   arXiv.org 2024
+SemanticScholar shi2025promptarmor           1.0   arXiv.org 2025
+SemanticScholar debenedetti2026camel         1.0   2026 IEEE Conference on Secure and Trust 2025
+SemanticScholar wu2024fsecure                1.0   arXiv.org 2024
+SemanticScholar costa2025fides               1.0   arXiv.org 2025
+SemanticScholar shi2025progent               1.0    2025
+SemanticScholar zhu2025melon                 1.0   International Conference on Machine Lear 2025
+SemanticScholar jia2025taskshield            1.0   Annual Meeting of the Association for Co 2024
+SemanticScholar an2025ipiguard               1.0   Conference on Empirical Methods in Natur 2025
+SemanticScholar beurerkellner2025patterns    1.0   arXiv.org 2025
+SemanticScholar li2025drift                  1.0   Neural Information Processing Systems 2025
+SemanticScholar kim2025pfi                   1.0   arXiv.org 2025
+SemanticScholar zhao2026clawguard            1.0   arXiv.org 2026
+SemanticScholar he2026attriguard             1.0   arXiv.org 2026
+SemanticScholar li2026toolfence              1.0   arXiv.org 2026
+SemanticScholar narisetty2026adaptive        1.0   arXiv.org 2026
+SemanticScholar garby2026llmbda              1.0   arXiv.org 2026
+SemanticScholar gong2025csagent              1.0    2025
+SemanticScholar zhu2025miniscope             1.0    2025
+SemanticScholar michael2026permission        1.0   arXiv.org 2026
+SemanticScholar yan2026policies              1.0   arXiv.org 2026
+SemanticScholar ge2026authorization          1.0   CHI Extended Abstracts 2026
+SemanticScholar brigham2026janus             1.0   arXiv.org 2026
+SemanticScholar wu2026permissions            1.0   IEEE Symposium on Security and Privacy 2025
+SemanticScholar salerno2026agent             1.0    2026
+SemanticScholar south2025delegation          1.0   arXiv.org 2025
+SemanticScholar su2026riskcards              1.0   International Journal of Graphic Design 2026
+SemanticScholar mozannar2025magentic         1.0   arXiv.org 2025
+SemanticScholar he2025plan                   1.0   International Conference on Human Factor 2025
+SemanticScholar amershi2019guidelines        1.0   International Conference on Human Factor 2019
+SemanticScholar parasuraman1997humans        1.0   Hum. Factors 1997
+SemanticScholar lee2004trust                 1.0   Hum. Factors 2004
+arXiv     bucinca2021trust             1.0   arXiv 2021
+SemanticScholar vasconcelos2023explanations  1.0   Proc. ACM Hum. Comput. Interact. 2022
+SemanticScholar bansal2021whole              1.0   International Conference on Human Factor 2020
+SemanticScholar cranor2008framework          1.0   UPSEC 2008
+SemanticScholar egelman2008warned            1.0   International Conference on Human Factor 2008
+SemanticScholar sunshine2009crying           1.0   USENIX Security Symposium 2009
+SemanticScholar felt2012android              1.0   Symposium On Usable Privacy and Security 2012
+SemanticScholar akhawe2013alice              1.0   USENIX Security Symposium 2013
+SemanticScholar anderson2015polymorphic      1.0   International Conference on Human Factor 2015
+SemanticScholar vance2018tuning              1.0   MIS Q. 2018
+SemanticScholar vance2025fog                 1.0   MIS Q. 2025
+SemanticScholar hart1988nasatlx              1.0    1988
+Crossref  brooke1996sus                1.0   Usability Evaluation In Industry 1996
+SemanticScholar jian2000trust                1.0    2000
+NOT FOUND macmillan2005detection              
+SemanticScholar saltzer1975protection        1.0   Proceedings of the IEEE 1975
+SemanticScholar denning1976lattice           1.0   CACM 1976
+SemanticScholar hardy1988confused            1.0   OPSR 1988
+SemanticScholar nissenbaum2004privacy        1.0    2004
+wrote /home/user/HCI/docs/literature/reference_verification.csv /home/user/HCI/paper/references_verified.bib

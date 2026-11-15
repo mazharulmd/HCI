@@ -1,8 +1,7 @@
-\documentclass[preprint,12pt,authoryear]{elsarticle}
+\documentclass[preprint,12pt,nonatbib]{elsarticle}
 % ---------------------------------------------------------------------------
 % Anonymized manuscript for Information Processing & Management (Elsevier;
-% double-anonymized review), elsarticle class, author-year references
-% (elsarticle-harv). Author details, CRediT, funding and competing-interest
+% double-anonymized review), elsarticle class, APA references (apacite). Author details, CRediT, funding and competing-interest
 % statements are on the separate title page; highlights are a separate file.
 % All numbers come from generated/*.tex, written by experiments/analyze.py and
 % experiments/analyze_v2.py, so results cannot drift from the code.
@@ -22,6 +21,7 @@
 \usepackage{subcaption}
 \usepackage{enumitem}
 \usepackage{lineno}
+\usepackage[natbibapa]{apacite}   % APA 7-style references, as used by IP&M
 \usepackage{hyperref}
 \usepackage[capitalise,noabbrev]{cleveref}
 \hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
@@ -33,6 +33,7 @@
 
 \input{generated/numbers.tex}
 \input{generated/numbers_v2.tex}
+\IfFileExists{generated/numbers_detectors.tex}{\input{generated/numbers_detectors.tex}}{}
 \newcommand{\clear}{\textsc{Clear}}
 \newcommand{\tier}[1]{\textsf{#1}}
 
@@ -46,30 +47,30 @@ indirect prompt injection}
 
 \begin{abstract}
 Tool-using AI agents can be hijacked by indirect prompt injection: instructions
-hidden in e-mails, documents or web pages that the agent reads. Strict
-information-flow defences block many legitimate tasks, so deployed agents fall
-back on generic approval dialogs, which people learn to ignore. We present
-\clear{}, a provenance-aware mediator that decides when to involve the user and
-what to show them. \clear{} attributes every argument of a proposed tool call to
-its source, scores contextual risk from interpretable features, and escalates
-through four tiers. Its dialogs show
-the source passage, a consequence preview computed in a sandbox and, at the
-highest tier, a cognitive-forcing check. We prove a conditional escalation floor
-that attacker-controlled text cannot lower. Replaying \nEpisodes{} real
-trajectories of \nModels{} LLM agents and five published defences in AgentDojo,
-\clear{} reduces held-out attack success from \asrNone\% to \asrClearO\% with an
-ideal user (\asrClearA\% when every escalation is denied), while asking
-\dlgReduction\% fewer questions than confirming every action. Its protection
-survives detector-evading phrasing (\asrEvadeClear\%, against at least
-\asrEvadeNoProvMin\% for a provenance-free mediator) and, with decoding-aware
-lineage, value laundering (\laundVtwoVal\%, against up to \laundVoneMax\%
-without decoding). On 250 synthetic stress scenarios it keeps full recall with
-far fewer false escalations of benign high-privilege actions than two
-alternative engines (\cbClearFer\% against \cbTbFer\% and \cbPgFer\%). A
+hidden in e-mails, documents or web pages that the agent processes. Deployed
+agents fall back on approval dialogs, which people learn to ignore. This study
+aims to decide, from the provenance of the information an action relies on,
+when an agent should ask its user and what evidence to show. We present
+\clear{}, a mediator that attributes every argument of a proposed tool call to
+its source, scores contextual risk from interpretable features and escalates
+through four tiers; we prove a conditional escalation floor that
+attacker-controlled text cannot lower. We replay \nEpisodes{} recorded
+trajectories of \nModels{} large language model agents on the AgentDojo
+benchmark (97 user tasks in four domains) and recompute the benchmark's own
+outcome predicates. On \nHeldAtt{} held-out attacked episodes, \clear{} reduces
+attack success from \asrNone\% to \asrClearO\% with an ideal user
+(\asrClearA\% with no user) and asks \dlgReduction\% fewer questions than
+confirming every action. On a random sample of \nDetTasks{} tasks, two current
+neural detectors that stop the agent on detection reach \asrPai\% and
+\asrPig\% attack success with \buPai\% and \buPig\% benign utility, against
+\asrClearOS\% and \buClearOS\% for \clear{}. Protection holds when attackers
+evade text detection (\asrEvadeClear\%, against at least \asrEvadeNoProvMin\%
+without provenance) and when they encode target values (\laundVtwoVal\% with
+decoding-aware lineage, against up to \laundVoneMax\% without). A
 habituation-aware user model, a simulation rather than human data, predicts
-lower end-to-end compromise than confirm-all in \simShare\% of \simGridN{}
-settings. Code, data and a proposed user-study protocol are released; no
-human study has been run.
+lower compromise than confirm-all in \simShare\% of \simGridN{} settings. We
+release code, data, a laboratory study apparatus and a power analysis; no human
+study has been run.
 \end{abstract}
 
 
@@ -160,7 +161,32 @@ re-implemented every borrowed idea and evaluated it on real trajectories. We
 adopted decoding-aware lineage and a \emph{computed} consequence preview,
 rejected goal drift, and audited the earlier evidence (\cref{sec:lessons}).
 
-\paragraph{Contributions.}
+\subsection{Research objective and questions}
+\label{sec:objectives}
+The \textbf{objective} of this study is to design and evaluate a mediation
+layer for tool-using AI agents that decides, from the provenance of the
+information an action relies on, \emph{when} to involve the user and
+\emph{what} evidence to show, so as to reduce compromise by indirect prompt
+injection while keeping the number of user decisions low and preserving the
+utility of legitimate tasks. We address four research questions:
+\begin{description}[leftmargin=*,itemsep=2pt,font=\normalfont\bfseries]
+\item[RQ1 (Security).] How much does provenance-aware escalation reduce attack
+  success compared with no defence, published model- and prompt-level defences,
+  current neural injection detectors, system-level policies and confirming every
+  action? (\cref{sec:rq1,sec:pubdef,sec:detectors})
+\item[RQ2 (Burden and utility).] How many user decisions does it require, and how
+  much benign utility does it keep with an ideal user and with no user at all?
+  (\cref{sec:rq2})
+\item[RQ3 (Robustness).] Does the protection survive attackers who evade text-based
+  detection or launder the target value through encodings, and which components
+  are responsible? (\cref{sec:attacktypes,sec:ablations,sec:launder,sec:cross})
+\item[RQ4 (Fallible users).] Under explicit assumptions about fallible and
+  habituating users, how does selective, evidence-rich escalation change
+  end-to-end compromise, and how should a user study test it?
+  (\cref{sec:human,sec:study})
+\end{description}
+
+\subsection{Contributions}
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
 \item A structured rapid review of 2023--2026 prompt-injection defences, organised by
   the \emph{role of the human} and the \emph{evidence} the human receives. It
@@ -214,9 +240,18 @@ user tasks; 629 security cases per attack; and stateful utility and security
 predicates. It also publishes full traces of many LLM agents under several
 attacks and defences, which we reuse. Follow-up work shows that
 argument-level scoring matters~\citep{shaw2026silent}, that personal data can be
-exfiltrated through simple injections~\citep{alizadeh2025simple}, and that
+exfiltrated through simple injections~\citep{alizadeh2025simple}, that
 automated and reinforcement-learning attacks transfer across
-tasks~\citep{hofer2026automated,chen2026autoinject}.
+tasks~\citep{hofer2026automated,chen2026autoinject}, and that injected
+descriptions can steer which tool an agent selects~\citep{shi2026toolselection}.
+A public red-teaming challenge collected 208{,}095 human-written attack prompts,
+showing how much more diverse adaptive attackers are than template
+benchmarks~\citep{abdelnabi2026llmail}. In the information-processing
+literature, jailbreak prompts are now generated and evolved
+automatically~\citep{liu2026seattack,tang2026evojail}, and threats in
+multi-agent LLM systems are detected and attributed from execution
+logs~\citep{rabieinejad2026logs}. \clear{} applies attribution earlier and at a
+finer grain: to each argument of a proposed action, before it executes.
 
 \subsection{Model- and prompt-level defences}
 Prompt transformations mark the provenance of data inside the prompt, as in
@@ -224,10 +259,19 @@ spotlighting~\citep{hines2024spotlighting}. Training-based defences teach models
 to ignore instructions in data: the instruction hierarchy~\citep{wallace2024instruction},
 StruQ~\citep{chen2025struq}, SecAlign~\citep{chen2025secalign} and Meta
 SecAlign~\citep{chen2025metasecalign}. Detectors and sanitisers filter tool
-outputs~\citep{shi2025promptarmor}. These approaches reduce attack success but
-give no guarantee. White-box and adaptive attacks break
+outputs~\citep{shi2025promptarmor}. Recent detectors classify injected text with
+fine-tuned encoders that are trained to avoid over-blocking benign
+text~\citep{li2025piguard}, detect injected instructions from the model's
+attention or hidden states~\citep{hung2025attentiontracker,wen2025instruction,zhong2026attention},
+or detect and then remove the injected span~\citep{chen2025detected,wang2026datafilter}.
+Step-level guardrails check each proposed tool invocation~\citep{mou2026toolsafe}.
+These approaches reduce attack success but give no guarantee. White-box and adaptive attacks break
 them~\citep{zhan2025adaptive,pandya2025attention,chen2026autoinject}, and
-static benchmarks overestimate them~\citep{ma2026autodojo}.
+static benchmarks overestimate them~\citep{ma2026autodojo}. A systematic
+re-evaluation finds that many published defences are less effective than
+reported once utility and adaptive attacks are measured
+together~\citep{jia2026critical}, and defence training can degrade an agent's
+ability to complete multi-step tasks~\citep{li2026autonomytax}.
 
 \subsection{System-level defences}
 CaMeL~\citep{debenedetti2026camel} extracts control and data flow from the
@@ -241,7 +285,8 @@ MELON~\citep{zhu2025melon}, AttriGuard~\citep{he2026attriguard}, Task
 Shield~\citep{jia2025taskshield}, IPIGuard~\citep{an2025ipiguard} and
 DRIFT~\citep{li2025drift} test whether an action is caused by the user's intent.
 \citet{beurerkellner2025patterns} catalogue architectural patterns with
-provable resistance. These systems report impressive results on AgentDojo, but
+provable resistance, and SAGA proposes an architecture that lets users govern
+the lifecycle and interactions of their agents~\citep{syros2026saga}. These systems report impressive results on AgentDojo, but
 under static attacks~\citep{narisetty2026adaptive}. Their utility costs on
 context-dependent tasks are well documented: CaMeL solves 77\% of AgentDojo
 tasks with guarantees against 84\% undefended~\citep{debenedetti2026camel}, and
@@ -268,7 +313,14 @@ user-authored rules with 113 participants and found that many overreach actions
 were \emph{approved by users}. \citet{salerno2026agent} report that
 practitioners struggle to see what lies behind an agent's actions.
 Authenticated delegation frameworks address \emph{who} an agent acts
-for~\citep{south2025delegation}.
+for~\citep{south2025delegation}. For error recovery rather than security,
+\citet{zhou2026check} model \emph{when} users should confirm the steps of a
+multi-step agent task as a scheduling problem, and find that intermediate
+confirmations save time compared with confirming only at the end.
+\citet{ditz2026oversight} show that human oversight itself is an attack surface
+that needs threat modelling. In an information-processing setting, greater agent
+autonomy changes both trust and workload in routine productivity
+tasks~\citep{geninatti2026autonomy}.
 
 The closest prior interface is Risk Cards~\citep{su2026riskcards}. Its
 published abstract describes a confirmation card combining source trust,
@@ -299,7 +351,10 @@ similar~\citep{vance2025fog}. In human--AI decision-making, explanations can
 increase reliance on wrong advice~\citep{bansal2021whole}. They reduce
 overreliance when they make verification cheap~\citep{vasconcelos2023explanations}.
 Cognitive forcing reduces overreliance at a cost in perceived
-usability~\citep{bucinca2021trust}. These findings frame automation trust as a
+usability~\citep{bucinca2021trust}. Whether explanations improve trust and
+decision performance depends on users' capacity to process
+them~\citep{wang2024rationality}, and the move from search results to generative
+answers changes how users assess credibility and form trust~\citep{casermeiro2027credibility}. These findings frame automation trust as a
 matter of appropriate reliance~\citep{parasuraman1997humans,lee2004trust,amershi2019guidelines}.
 They motivate three \clear{} principles: ask rarely, show \emph{verifiable}
 provenance rather than an AI's opinion, and reserve forcing for the rare
@@ -328,10 +383,10 @@ executable mediation and trace-replay contributions described above.
 \toprule
 Human role & Representative work & What the human sees & Burden \\
 \midrule
-Absent (model) & spotlighting, instruction hierarchy, StruQ, SecAlign, Meta SecAlign, detectors & nothing & n/a \\
+Absent (model) & spotlighting, instruction hierarchy, StruQ, SecAlign, Meta SecAlign, detectors (PIGuard, Attention Tracker, DataFilter) & nothing & n/a \\
 Absent (system) & CaMeL, FIDES, f-secure, MELON, Task Shield, IPIGuard, DRIFT, AttriGuard & nothing (calls fail) & no \\
-Pre-authorisation & Progent, ClawGuard, MiniScope, ToolFence, user-authored policies & rules / scopes & partly \\
-Runtime confirmation & Magentic-UI, Janus, Risk Cards, commercial agents & call or card with labels & proxy \\
+Pre-authorisation & Progent, ClawGuard, MiniScope, ToolFence, SAGA, user-authored policies & rules / scopes & partly \\
+Runtime confirmation & Magentic-UI, Janus, Risk Cards, confirmation scheduling, commercial agents & call or card with labels & proxy \\
 \textbf{\clear{} (ours)} & envelope + risk-adaptive escalation + audit & argument lineage, reasons, forcing & \textbf{yes} \\
 \bottomrule
 \end{tabular}
@@ -661,18 +716,37 @@ On side-effecting calls of successful attacks the two criteria agree on
 \labelAgree\% of calls (Cohen's $\kappa=\labelKappa$). In total \nInjCalls{}
 calls are labelled injected.
 
-\subsection{Policies and human-response modes}
-All tool-call mediators run on the same substrate.
+\subsection{Compared methods}
+\label{sec:baselines}
+\Cref{tab:methods} lists every method in the comparison. All of them are applied
+to the same recorded trajectories and scored with the same benchmark predicates,
+so differences between rows are paired comparisons on identical episodes.
 \begin{itemize}[leftmargin=*,itemsep=1pt]
-\item \textbf{No defence.}
-\item \textbf{Injection detector (abort).} Aborts the episode at the first
-  untrusted output whose instruction-likeness is $\ge0.5$. This mirrors
-  AgentDojo's DeBERTa detector, which aborts the agent.
+\item \textbf{Published pipelines.} AgentDojo released complete runs of
+  model- and prompt-level defences: prompt repetition (``sandwich''),
+  spotlighting with delimiters~\citep{hines2024spotlighting}, a tool filter and a
+  DeBERTa injection detector~\citep{debenedetti2024agentdojo}, and the
+  defence-trained Meta SecAlign-70B model~\citep{chen2025metasecalign}. We use
+  their recorded outcomes alone and with \clear{} added on top.
+\item \textbf{Neural detectors (detect and abort).} Two open injection
+  classifiers, the ProtectAI DeBERTa-v3 detector~\citep{protectai2024deberta} and
+  PIGuard~\citep{li2025piguard}, score every untrusted tool output.
+  AgentDojo's own detector pipeline replaces a flagged output with a notice and
+  lets the agent continue; what the agent would have done next cannot be
+  recomputed from a recording, so we replay the stricter variant AgentDojo also
+  provides, which aborts the agent at the first flagged output (the recorded
+  redacting pipeline is reported separately).
+  Texts longer than the 512-token window are scored in overlapping windows and
+  the maximum is used; an output is flagged at an injection probability of at
+  least 0.5. Both models run at full precision with pinned weights.
+\item \textbf{Lexical injection detector (abort).} The same abort rule driven by
+  \clear{}'s transparent instruction-likeness score ($\ge0.5$).
 \item \textbf{Task-scoped allowlist.} Denies calls whose capability is outside
-  the envelope, in the spirit of Progent and ClawGuard.
+  the intent envelope, in the spirit of least-privilege systems such as
+  Progent~\citep{shi2025progent} and ClawGuard~\citep{zhao2026clawguard}.
 \item \textbf{Strict information-flow policy.} Denies side-effecting calls with
-  any non-endorsed target, value or planted token, or with private-data egress.
-  This follows CaMeL/FIDES-style policies.
+  any non-endorsed target, value or planted token, or with private-data egress,
+  following CaMeL/FIDES-style policies~\citep{debenedetti2026camel,costa2025fides}.
 \item \textbf{Confirm-all.} Asks about every side-effecting call; this is the
   de-facto industry pattern.
 \item \textbf{\clear{}.} Asks about \tier{CONFIRM}/\tier{FORCE} calls only.
@@ -682,6 +756,45 @@ For the two human-in-the-loop policies we report two bounding response modes:
 escalations} (no human: every escalation is denied, fail-closed). A
 rubber-stamping user would reproduce the undefended result. \Cref{sec:human}
 studies the space between these bounds.
+
+\paragraph{Recent defences that cannot be replayed.} Defences that change what the
+agent generates, rather than which proposed calls are executed, need live model
+calls: CaMeL's planner, MELON's masked re-execution~\citep{zhu2025melon}, Task
+Shield~\citep{jia2025taskshield}, IPIGuard's tool-dependency graph~\citep{an2025ipiguard},
+DRIFT~\citep{li2025drift}, Progent's LLM-generated policies~\citep{shi2025progent},
+DataFilter's 8B-parameter filter model~\citep{wang2026datafilter} and attention-based
+detectors that read the agent model's internals~\citep{hung2025attentiontracker,zhong2026attention}.
+Their effect cannot be computed from recorded trajectories, and copying published
+numbers would compare different models, versions and runs. We therefore represent
+these families by replayable counterparts (the strict information-flow policy and
+the task-scoped allowlist for system-level defences; two current neural detectors
+for detection-based defences) and position the rest qualitatively in
+\cref{sec:related}.
+
+\begin{table}[t]
+\centering\small
+\caption{Methods compared in the trace-replay evaluation. ``Replay'': the method's decisions are computed on the recorded calls and outputs and the episode is re-executed; ``recorded'': the outcome of AgentDojo's own run with that defence.}
+\label{tab:methods}
+\begin{tabular}{p{0.27\linewidth}p{0.22\linewidth}p{0.2\linewidth}p{0.19\linewidth}}
+\toprule
+Method & Category & Reference & Evaluated by \\
+\midrule
+No defence & -- & \citet{debenedetti2024agentdojo} & recorded \\
+Sandwich (repeat user prompt) & prompt-level & \citet{debenedetti2024agentdojo} & recorded \\
+Spotlighting (delimiters) & prompt-level & \citet{hines2024spotlighting} & recorded \\
+Tool filter & prompt-level & \citet{debenedetti2024agentdojo} & recorded \\
+DeBERTa detector (AgentDojo) & detector & \citet{debenedetti2024agentdojo} & recorded \\
+Meta SecAlign-70B & model-level (2025) & \citet{chen2025metasecalign} & recorded \\
+ProtectAI DeBERTa-v3 v2 & detector (2024) & \citet{protectai2024deberta} & replay \\
+PIGuard & detector (2025) & \citet{li2025piguard} & replay \\
+Lexical detector & detector & this paper & replay \\
+Task-scoped allowlist & least privilege & after \citet{shi2025progent} & replay \\
+Strict information-flow policy & information flow & after \citet{debenedetti2026camel} & replay \\
+Confirm-all & human-in-the-loop & industry practice & replay \\
+\clear{} (v1, v2) and ablations & human-in-the-loop & this paper & replay \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Metrics and statistics}
 \textbf{ASR} is the fraction of attacked episodes whose security predicate holds
@@ -771,6 +884,7 @@ individual jitter, and three mixtures are compared.
 \input{generated/main_results.tex}
 
 \subsection{RQ1: Security}
+\label{sec:rq1}
 \Cref{tab:main} and \cref{fig:tradeoff} summarise the held-out results. Without
 a defence, \asrNone\% of attacked episodes succeed. \clear{} reduces this to
 \asrClearO\% \asrClearOCI{} with an ideal user and to \asrClearA\% when every
@@ -801,6 +915,7 @@ it; it also accounts for most of confirm-all's residual. Excluding it,
 \end{figure}
 
 \subsection{RQ2: Burden and utility}
+\label{sec:rq2}
 \clear{} asks \dlgClearO{} questions per benign task against \dlgCallO{} for
 confirm-all, a \dlgReduction\% reduction. All 612 benign replay episodes with
 a difference favour \clear{}; repeated benchmark tasks are clustered for
@@ -819,12 +934,14 @@ Holm-adjusted $p<.001$). It
 remains well below the undefended \buNone\%: the legitimate actions that
 \clear{} escalates are exactly those that need a human.
 
-\subsection{Composition with published defences and models}
+\subsection{RQ1: Composition with published defences and models}
+\label{sec:pubdef}
 \Cref{tab:pub} replays \clear{} on top of the published defences.
 Model-/prompt-level defences reduce ASR but leave between 2.1\% (Meta
 SecAlign) and 41.8\% (spotlighting) of attacks successful. Adding \clear{}
-brings every pipeline to $\le$1.3\% with an ideal user. The detector pipeline
-shows the cost of aborting: its benign utility is 41.2\%. Across all 22 models
+brings every pipeline to $\le$1.3\% with an ideal user. The detector pipeline,
+which redacts flagged tool outputs, shows the utility cost of detection: its
+benign utility is 41.2\%, against 70.1\% undefended. Across all 22 models
 (\cref{fig:permodel}, appendix), \clear{}'s ideal-user ASR never exceeds 3.0\%
 (Claude-3.5-Sonnet-0620), against an undefended range of 0.9--56.8\%.
 
@@ -835,7 +952,8 @@ shows the cost of aborting: its benign utility is 41.2\%. Across all 22 models
 \resizebox{\linewidth}{!}{\input{generated/published_defences.tex}}
 \end{table}
 
-\subsection{Attack types and a detector-evading attacker}
+\subsection{RQ3: Attack types and a detector-evading attacker}
+\label{sec:attacktypes}
 \label{sec:adaptive}
 \Cref{tab:attacks} varies the attack (GPT-4o, all suites). The lexical detector
 is near-perfect on the two templates its patterns describe. It offers no
@@ -871,7 +989,8 @@ and disappears under evasion. Argument provenance is what buys robustness.
 \label{fig:curves}
 \end{figure}
 
-\subsection{Ablations and call-level behaviour}
+\subsection{RQ3: Ablations and call-level behaviour}
+\label{sec:ablations}
 \input{generated/ablations.tex}
 
 \Cref{tab:ablation} isolates each component. Removing provenance raises ASR
@@ -914,7 +1033,7 @@ outcome when a value is disguised (E1). The rejected goal-drift feature, which
 was retained for reporting only, adds dialogs without catching additional
 attacks on held-out data as well (\cref{tab:ablation}).
 
-\subsection{E1: Provenance laundering}
+\subsection{RQ3 (E1): Provenance laundering}
 \label{sec:launder}
 \Cref{tab:launder} and \cref{fig:launder} report residual attack success among
 the \laundN{} held-out attacks that succeeded against the undefended agent. With
@@ -954,7 +1073,7 @@ non-adversarial input.
 \label{fig:launder}
 \end{figure}
 
-\subsection{E2: Cross-benchmark stress test}
+\subsection{RQ1 and RQ3 (E2): Cross-benchmark stress test}
 \label{sec:cross}
 \Cref{tab:cross} compares six engines on the stress scenarios. On
 PROV-Guard-250, every provenance-aware engine escalates all 150 attacks in
@@ -1119,50 +1238,123 @@ confirm-all variants raised 18, with no client errors.
 
 % =========================================================================
 \section{Discussion}
-\paragraph{Simulated users are for hypotheses, not results.} \clear{} is the
-third iteration of this project; its predecessors were built with other AI
-research assistants. One of them reported large user-study effects that, on
-audit, came from effect sizes written into a simulator. \Cref{sec:lessons}
+\label{sec:discussion}
+
+\subsection{Principal findings}
+\label{sec:findings}
+\textbf{RQ1 (security).} On \nHeldAtt{} held-out attacked episodes,
+provenance-aware escalation reduces attack success from \asrNone\% to
+\asrClearO\% with an ideal user and to \asrClearA\% with no user at all. It
+brings every published model- and prompt-level defence, including the
+defence-trained Meta SecAlign-70B, to at most 1.3\%. On a random sample of
+\nDetTasks{} user tasks, current neural detectors that abort at a flagged output
+reach \asrPai\% (ProtectAI) and \asrPig\% (PIGuard) attack success, against
+\asrClearOS\% for \clear{} with an ideal user on the same episodes, and their
+benign utility is \buPai\% and \buPig\%, against \buClearOS\%.
+\textbf{RQ2 (burden and utility).} \clear{} asks \dlgClearO{} questions per benign
+task against \dlgCallO{} for confirm-all (\dlgReduction\% fewer), and
+\noDialogClear\% of benign tasks need no question at all. Without a user it keeps
+\buClearA\% benign utility, more than confirm-all-deny and the strict
+information-flow policy.
+\textbf{RQ3 (robustness).} When attackers phrase injections so that no text cue
+fires, \clear{} still holds attack success at \asrEvadeClear\%, while no
+provenance-free threshold gets below \asrEvadeNoProvMin\%. Decoding-aware lineage
+restores protection against value laundering (\laundVtwoVal\%, against up to
+\laundVoneMax\% without decoding). The ablations attribute this robustness to
+argument provenance.
+\textbf{RQ4 (fallible users).} In a parametric simulation, not human data,
+selective and evidence-rich escalation predicts lower end-to-end compromise than
+confirm-all in \simShare\% of \simGridN{} settings. Its power analysis shows that a
+user study of feasible size can test the evidence effect, but not a selectivity
+effect on prevention, which we therefore test for non-inferiority.
+
+\subsection{How the study differs from and advances prior work}
+\label{sec:advance}
+\textbf{From detection to provenance.} Detection-based defences, including the
+current neural detectors compared here~\citep{protectai2024deberta,li2025piguard}
+and recent attention- or state-based methods~\citep{hung2025attentiontracker,wen2025instruction,zhong2026attention},
+judge \emph{what the text says}. They act on whole tool outputs and must stop or
+redact the agent when they fire, which costs utility on the many tasks whose
+outputs contain imperative text. \clear{} instead asks \emph{where each value
+of a proposed action came from}. It acts on individual calls and lets every
+action without a risky provenance pattern run. The comparison in
+\cref{sec:detectors} quantifies this difference on identical episodes.
+\textbf{From enforcement to selective judgement.} System-level
+defences~\citep{debenedetti2026camel,costa2025fides,shi2025progent} enforce
+policies without a person, and recent analyses argue that context-dependent
+flows cannot be classified without context~\citep{abdelnabi2026always}. \clear{}
+keeps an enforcement mode (deny escalations), which is competitive with the strict
+information-flow policy, and adds a principled point at which a person resolves
+the cases that policy cannot.
+\textbf{From interface proposals to measured mediation.} Confirmation interfaces
+for agents~\citep{mozannar2025magentic,su2026riskcards} and models of when to
+confirm steps for error recovery~\citep{zhou2026check} specify what to show or
+when to ask. They do not evaluate the security effect of their decisions on
+agent state. \clear{} is executable, and every decision it makes is replayed
+against the benchmark's own state predicates, with the number of questions
+reported alongside attack success. This combination---security, utility and interruption burden measured together,
+on the same thousands of recorded agent runs---is what the trace-replay
+evaluation adds.
+
+\subsection{Theoretical implications}
+\label{sec:theory}
+\textbf{Provenance is the robust signal; text signals are cheap but brittle.}
+Indirect prompt injection is an information-flow problem: the attacker controls
+the \emph{content} of some information, but not the \emph{route} by which that
+information reaches an action. Signals derived from content are therefore under
+the attacker's control, while the identity of a value's source is not. Our
+results show the consequence. On known templates, instruction-likeness separates
+attacks almost perfectly, and a mediator built on it looks excellent on static
+benchmarks; once attackers rephrase, it offers no guarantee, and AgentDojo's own
+misspelled \texttt{ignore\_previous} payload already defeats the lexical
+detector. The escalation floor (\cref{prop:floor,prop:launder}) states the
+underlying property formally: adding attacker-controlled text can never lower
+the scrutiny an externally sourced action receives.
+\textbf{Human attention is a budgeted resource.} The human in the loop is not a
+free verifier. More than half of confirm-all's dialogs (0.41 of 0.79 per benign
+task) concern actions that \clear{} does not escalate, and across all held-out
+episodes they prevent 23 additional attacks (0.15 percentage points). Their price
+is habituation, which the warning literature shows is fast and
+generalising~\citep{anderson2015polymorphic,vance2025fog}. Treating oversight as
+the allocation of a scarce resource turns the design question from ``should we
+ask?'' into ``where does a question buy the most security?''. Our signal-detection
+model makes this trade-off explicit and yields testable predictions.
+\textbf{Evidence should be verifiable, not persuasive.} Explanations of an AI's
+judgement can increase overreliance~\citep{bansal2021whole}, and their benefit
+depends on users' capacity to process them~\citep{wang2024rationality}.
+\clear{}'s dialogs instead state checkable facts---``this account number appears
+only in the transaction list''---which lower the cost of
+verification~\citep{vasconcelos2023explanations}. The forcing question turns the
+most important fact into an action the user must take.
+
+\subsection{Practical implications}
+\label{sec:practice}
+\textbf{For agent platforms.} (1) Treat argument provenance as part of the
+tool-call API and expose it to users. (2) Budget interruptions and report dialogs
+per task alongside attack success. (3) Never execute irreversible actions silently
+above the lowest risk tier. (4) Differentiate the rare high-risk interaction
+visually \emph{and} behaviourally. (5) Let users edit the task scope before
+execution, and keep the scope compiler out of reach of injected text. (6) Fail
+closed when no human is present, and accept that utility then drops for tasks
+that genuinely need judgement.
+\textbf{For evaluators.} Report the human cost of a defence together with its
+security; evaluate defences blind to labels; include an attacker who evades text
+signals; and cluster statistics by benchmark task, because the same tasks recur
+across models. Replaying recorded trajectories, as here, makes such comparisons
+cheap, paired and reproducible.
+\textbf{For organisations deploying agents.} Because the mediator assesses a call
+in well under a millisecond and keeps an audit trail of every decision and its
+provenance, it can be added to existing agents without retraining models, and
+its log supports after-the-fact review of what an agent did and why it was or
+was not stopped.
+
+\subsection{Simulated users are for hypotheses, not results}
+\clear{} is the third iteration of this project; its predecessors were built with
+other AI research assistants. One of them reported large user-study effects that,
+on audit, came from effect sizes written into a simulator. \Cref{sec:lessons}
 documents the audit and the reporting rules this paper follows: agent behaviour
 comes from recorded agents, simulated users only generate hypotheses, and no
 inferential statistics are reported over simulated participants.
-
-\label{sec:discussion}
-
-\paragraph{Provenance is the robust signal; text signals are cheap but brittle.}
-On known templates, instruction-likeness separates attacks almost perfectly.
-A mediator built on it would look excellent on static benchmarks: fewer
-dialogs, and a detector with near-zero ASR. The same mediator offers no
-guarantee once attackers rephrase. AgentDojo's own misspelled
-\texttt{ignore\_previous} payload already defeats the lexical detector.
-Argument-level provenance is not something the attacker can rephrase away: a
-value that only appears in their e-mail is external, whatever the e-mail says.
-We recommend that agent platforms make provenance a first-class property of
-tool arguments and expose it to users.
-
-\paragraph{The human is a scarce resource; spend attention where it buys security.}
-More than half of confirm-all's dialogs (0.41 of 0.79 per benign task) concern
-actions that \clear{} does not escalate. Across all held-out episodes they
-prevent 23 additional attacks (0.15 percentage points). Their price is
-habituation, which the warning literature shows is fast and generalising. \clear{}'s tiering concentrates the strongest
-interaction on a small, attack-enriched set. Our simulation suggests that this
-selectivity matters as much as better evidence, and that both compound.
-
-\paragraph{Escalations should be verifiable, not persuasive.}
-Explanations of an AI's judgement can increase overreliance~\citep{bansal2021whole}.
-\clear{}'s dialogs instead state checkable facts---``this account number appears
-only in the transaction list''---which lower the cost of
-verification~\citep{vasconcelos2023explanations}. The forcing question turns
-the most important fact into an action the user must take.
-
-\paragraph{Design implications.}
-(1) Treat argument provenance as part of the tool-call API. (2) Budget
-interruptions and report dialogs per task alongside ASR. (3) Never execute
-irreversible actions silently above the lowest risk tier. (4) Differentiate the
-rare high-risk interaction visually \emph{and} behaviourally. (5) Let users
-edit the task scope before execution, and keep the compiler out of reach of
-injected text. (6) Fail closed when no human is present, and accept that
-utility then drops for tasks that genuinely need judgement.
 
 % =========================================================================
 \section{Limitations and threats to validity}
@@ -1249,7 +1441,7 @@ on simulated participants are not reported as results (\cref{sec:lessons}), and
 every reference was checked against a bibliographic record (verification log in
 the repository).
 
-\bibliographystyle{elsarticle-harv}
+\bibliographystyle{apacite}
 \bibliography{references}
 
 \appendix

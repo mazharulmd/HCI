@@ -47,7 +47,7 @@ INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 
 POLICY_LABEL = {
     "none:none": "No defence",
-    "pi_detector:auto": "Injection detector (abort)",
+    "pi_detector:auto": "Lexical injection detector (abort)",
     "envelope_only:auto": "Task-scoped allowlist (auto)",
     "strict_ifc:auto": "Strict info-flow policy (auto)",
     "confirm_all:oracle": "Confirm-all (ideal user)",
@@ -677,7 +677,8 @@ def main() -> None:
     tex = tex.rename(columns={"label": "Policy"})
     to_latex(tex, TAB / "main_results.tex",
              "Held-out evaluation (22 LLM agents; development split excluded; \\texttt{important\\_instructions} attack). "
-             "Point estimates with 95\\% cluster-bootstrap confidence intervals (clusters: model $\\times$ user task).", "tab:main", "lrrrr")
+             "Point estimates with 95\\% cluster-bootstrap confidence intervals (clusters: benchmark user tasks, "
+             "shared across models).", "tab:main", "lrrrr")
     statsout["main"] = main.to_dict(orient="records")
 
     # paired significance tests
@@ -694,6 +695,51 @@ def main() -> None:
     tests = pd.concat(tests, ignore_index=True)
     tests.to_csv(TAB / "paired_tests.csv", index=False)
     statsout["paired_tests"] = tests.to_dict(orient="records")
+
+    # ------------------------------------------------ comparison with neural detectors (task sample)
+    # The detectors were replayed on a seeded cluster sample of user tasks (experiments/detector_baselines.py);
+    # every method is compared on exactly the sampled episodes.
+    det = ["protectai_v2:auto", "piguard:auto"]
+    if all(p in set(core.policy) for p in det):
+        keys = set(core[core.policy == det[0]].key) & set(core[core.policy == det[1]].key)
+        sub = core[core.key.isin(keys)]
+        names = {"protectai_v2:auto": "ProtectAI DeBERTa-v3 detector (abort)", "piguard:auto": "PIGuard detector (abort)"}
+        pols = ["none:none", "pi_detector:auto", *det, "envelope_only:auto", "strict_ifc:auto",
+                "confirm_all:oracle", "confirm_all:auto", "clear:oracle", "clear:auto"]
+        dm = policy_metrics(sub, core_calls, pols, label_fn=lambda p: names.get(p, POLICY_LABEL.get(p, p)))
+        dm.to_csv(TAB / "detectors.csv", index=False)
+        dtex = dm.assign(**{
+            "ASR %": [fmt_ci(r.ASR, r.ASR_lo, r.ASR_hi) for r in dm.itertuples()],
+            "Utility under attack %": [fmt_ci(r.UA, r.UA_lo, r.UA_hi) for r in dm.itertuples()],
+            "Benign utility %": [fmt_ci(r.BU, r.BU_lo, r.BU_hi) for r in dm.itertuples()],
+            "Dialogs / benign task": [fmt_ci(r.int_benign, r.int_benign_lo, r.int_benign_hi, pct=False) for r in dm.itertuples()],
+        })[["label", "ASR %", "Utility under attack %", "Benign utility %", "Dialogs / benign task"]].rename(columns={"label": "Policy"})
+        n_tasks = sub.cluster.nunique()
+        to_latex(dtex, TAB / "detectors.tex",
+                 f"Comparison with current neural injection detectors on a seeded random sample of {n_tasks} benchmark "
+                 "user tasks (all 22 agents; held-out episodes). Every method is evaluated on exactly these episodes. "
+                 "95\\% cluster-bootstrap confidence intervals (clusters: user tasks).", "tab:detectors", "lrrrr")
+        dt = []
+        for ref, others in (("clear:oracle", [*det, "pi_detector:auto"]), ("clear:auto", det)):
+            for metric, subset in (("s", "attacked"), ("u", "benign"), ("u", "attacked")):
+                dt.append(paired_tests(sub, ref, others, metric, subset))
+        dt = pd.concat(dt, ignore_index=True)
+        dt.to_csv(TAB / "detector_tests.csv", index=False)
+        statsout["detectors"] = {"n_tasks": int(n_tasks), "metrics": dm.to_dict(orient="records"),
+                                 "tests": dt.to_dict(orient="records")}
+        dmi = dm.set_index("policy")
+        lines = [f"\\newcommand{{\\nDetTasks}}{{{n_tasks}}}",
+                 f"\\newcommand{{\\nDetAtt}}{{{int(dmi.loc['none:none'].n_attacked):,}}}".replace(",", "{,}"),
+                 f"\\newcommand{{\\nDetBen}}{{{int(dmi.loc['none:none'].n_benign):,}}}".replace(",", "{,}")]
+        for key, nm in (("none:none", "NoneS"), ("pi_detector:auto", "DetS"), ("protectai_v2:auto", "Pai"),
+                        ("piguard:auto", "Pig"), ("strict_ifc:auto", "IfcS"), ("confirm_all:oracle", "CallOS"),
+                        ("clear:oracle", "ClearOS"), ("clear:auto", "ClearAS")):
+            r = dmi.loc[key]
+            lines += [f"\\newcommand{{\\asr{nm}}}{{{100 * r.ASR:.{2 if r.ASR < 0.1 else 1}f}}}",
+                      f"\\newcommand{{\\bu{nm}}}{{{100 * r.BU:.1f}}}", f"\\newcommand{{\\ua{nm}}}{{{100 * r.UA:.1f}}}"]
+        pmax = dt[dt.comparison.str.contains("protectai|piguard") & (dt.metric == "u")].p_holm.max()
+        lines.append(f"\\newcommand{{\\detUtilP}}{{$p={pmax:.3f}$}}" if pmax >= 0.001 else "\\newcommand{\\detUtilP}{$p<.001$}")
+        (TAB / "numbers_detectors.tex").write_text("\n".join(lines) + "\n")
     bpiv = core[~core.attacked].pivot_table(index="key", columns="policy", values="confirm", aggfunc="first")
     statsout["interruptions_task_signflip"] = {
         "clear_vs_confirm_all": task_paired_signflip(bpiv["clear:oracle"], bpiv["confirm_all:oracle"]),

@@ -128,3 +128,37 @@ No participant data exist at the time of these changes.
   who failed one attention check" described the primary analysis set). The
   hypothesis label H-U4 was corrected to H-U3. The script
   (`experiments/analyze_user_study.py`) was tested on synthetic logs only.
+
+### Desk revision for Information Processing & Management (November 2026)
+
+Changes made in response to the senior editor's initial screening. No human data exist.
+
+* **New baselines.** Two current neural prompt-injection detectors are replayed as
+  detect-and-abort baselines (`experiments/detector_baselines.py`): ProtectAI's
+  DeBERTa-v3 v2 detector (ONNX, pinned revision) and PIGuard (ACL 2025; the
+  architecture is re-implemented and the released weights are loaded, so no code from
+  the model repository runs). They are evaluated on a seeded cluster sample of about
+  a quarter of the benchmark's user tasks (23 tasks, all 22 models), because
+  full-precision CPU inference on every held-out output would take more than eight
+  hours. Every other method is recomputed on exactly the sampled episodes.
+  8-bit dynamic quantization was tried and rejected: no speed-up, and PIGuard's flags
+  agreed with full precision on only 26% of a test sample.
+* **Correction.** The manuscript previously said that AgentDojo's detector pipeline
+  aborts the agent. Its default replaces a flagged output with a notice and lets the
+  agent continue. The replayed baselines use the abort variant that AgentDojo also
+  offers, because the agent's behaviour after redaction cannot be recomputed from a
+  recording; the text now says so.
+* **References.** Every entry was matched against Semantic Scholar, Crossref and arXiv
+  (`experiments/verify_references.py`, log in
+  `docs/literature/reference_verification.csv`) and rebuilt from the matched records
+  (`experiments/build_bibliography.py`): publisher records for DOIs, author names as
+  printed for peer-reviewed papers without DOIs, arXiv records for preprints. Preprints
+  were replaced by their peer-reviewed versions where these exist (for example CaMeL,
+  SaTML 2026; DRIFT, NeurIPS 2025; spotlighting, CAMLIS 2024). Twenty-one recent
+  peer-reviewed references were added, each matched to its DOI in Crossref. The style
+  is now APA (apacite), as used by IP&M.
+* **Manuscript.** Explicit research objective and questions (Section 1.1), a
+  compared-methods section and table, a detector comparison, and a Discussion
+  restructured into principal findings, advances over prior work, theoretical and
+  practical implications. The unsupported claim of being the first such evaluation was
+  removed.
