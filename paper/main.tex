@@ -33,7 +33,7 @@
 
 \input{generated/numbers.tex}
 \input{generated/numbers_v2.tex}
-\IfFileExists{generated/numbers_detectors.tex}{\input{generated/numbers_detectors.tex}}{}
+\input{generated/numbers_detectors.tex}
 \newcommand{\clear}{\textsc{Clear}}
 \newcommand{\tier}[1]{\textsf{#1}}
 
@@ -47,13 +47,12 @@ indirect prompt injection}
 
 \begin{abstract}
 Tool-using AI agents can be hijacked by indirect prompt injection: instructions
-hidden in e-mails, documents or web pages that the agent processes. Deployed
+hidden in content that the agent processes. Deployed
 agents fall back on approval dialogs, which people learn to ignore. This study
 aims to decide, from the provenance of the information an action relies on,
 when an agent should ask its user and what evidence to show. We present
 \clear{}, a mediator that attributes every argument of a proposed tool call to
-its source, scores contextual risk from interpretable features and escalates
-through four tiers; we prove a conditional escalation floor that
+its source and escalates through four risk tiers; we prove a conditional escalation floor that
 attacker-controlled text cannot lower. We replay \nEpisodes{} recorded
 trajectories of \nModels{} large language model agents on the AgentDojo
 benchmark (97 user tasks in four domains) and recompute the benchmark's own
@@ -69,8 +68,7 @@ without provenance) and when they encode target values (\laundVtwoVal\% with
 decoding-aware lineage, against up to \laundVoneMax\% without). A
 habituation-aware user model, a simulation rather than human data, predicts
 lower compromise than confirm-all in \simShare\% of \simGridN{} settings. We
-release code, data, a laboratory study apparatus and a power analysis; no human
-study has been run.
+release code, data and a user-study apparatus; no human study has been run.
 \end{abstract}
 
 
@@ -951,6 +949,31 @@ benign utility is 41.2\%, against 70.1\% undefended. Across all 22 models
 \label{tab:pub}
 \resizebox{\linewidth}{!}{\input{generated/published_defences.tex}}
 \end{table}
+
+\subsection{RQ1: Comparison with current neural detectors}
+\label{sec:detectors}
+\Cref{tab:detectors} compares \clear{} with ProtectAI's detector and PIGuard on
+the random sample of \nDetTasks{} user tasks (\nDetAtt{} attacked and \nDetBen{}
+benign held-out episodes of all 22 agents). Without a defence, \asrNoneS\% of
+attacked episodes succeed. Both detectors stop the template attack about as well
+as \clear{}: \asrPai\% (ProtectAI) and \asrPig\% (PIGuard) attack success, against
+\asrClearOS\% for \clear{} with an ideal user; at the task level these differences
+are not significant (Holm-adjusted $p\ge\detSecP$). The methods differ sharply in
+what they cost. A detector alarm stops the agent, and both detectors also fire on
+benign tool outputs that merely contain imperative or instruction-like text: they
+stop \stopPai\% (ProtectAI) and \stopPig\% (PIGuard) of benign tasks. Benign utility
+therefore falls from \buNoneS\% to \buPai\% and \buPig\%, and utility under attack
+to \uaPai\% and \uaPig\%. \clear{} with an ideal user keeps the undefended benign
+utility (\buClearOS\%) and the highest utility under attack (\uaClearOS\%;
+task-clustered paired tests, \detUtilOP). Even with no user, when every escalation
+is denied, \clear{} keeps \buClearAS\% benign utility, more than either detector
+(\detUtilP). Two caveats apply. First, the detectors are replayed in their stricter
+abort variant; AgentDojo's default instead redacts a flagged output and lets the
+agent continue, which costs less utility but cannot be replayed (\cref{sec:baselines}).
+Second, the detectors are evaluated on the benchmark's template attack only; their
+robustness to attackers who optimise against them is not tested here.
+
+\input{generated/detectors.tex}
 
 \subsection{RQ3: Attack types and a detector-evading attacker}
 \label{sec:attacktypes}

@@ -1,7 +1,7 @@
 Highlights
 
-- Provenance-aware mediation decides when an AI agent must ask its user.
-- Conditional escalation floor: attacker text cannot lower external targets' tier.
-- Replay of 24,648 real agent trajectories: attack success 16.5% to 0.7%.
-- 51% fewer approval dialogs than confirming every side-effecting action.
-- Protection survives detector-evading phrasing and encoded (laundered) values.
+- CLEAR decides when an AI agent must ask its user by tracing each argument of a proposed tool call back to the information source it came from.
+- A proved escalation floor ensures that attacker-written text cannot lower the review level of an action whose target comes from untrusted content.
+- On 24,648 recorded trajectories of 22 LLM agents, attack success falls from 16.5% to 0.69% while users answer 51% fewer questions than with confirm-all.
+- Current neural detectors reach similar attack success only by stopping the agent, cutting benign task utility from 46.5% to about 13%; CLEAR keeps 46.5%.
+- Protection survives attackers who evade text detection or encode target values, because the source of a value cannot be rephrased away by the attacker.

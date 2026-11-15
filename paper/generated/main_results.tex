@@ -1,7 +1,7 @@
 \begin{table}[t]
 \centering
 \small
-\caption{Held-out evaluation (22 LLM agents; development split excluded; \texttt{important\_instructions} attack). Point estimates with 95\% cluster-bootstrap confidence intervals (clusters: model $\times$ user task).}
+\caption{Held-out evaluation (22 LLM agents; development split excluded; \texttt{important\_instructions} attack). Point estimates with 95\% cluster-bootstrap confidence intervals (clusters: benchmark user tasks, shared across models).}
 \label{tab:main}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrr}
@@ -9,7 +9,7 @@
 Policy & ASR \% & Utility under attack \% & Benign utility \% & Dialogs / benign task \\
 \midrule
 No defence & 16.5 [14.1, 19.1] & 44.4 [39.4, 49.2] & 54.4 [49.0, 59.5] & 0.00 [0.00, 0.00] \\
-Injection detector (abort) & 0.1 [0.0, 0.3] & 5.2 [2.0, 8.9] & 54.4 [49.0, 59.5] & 0.00 [0.00, 0.00] \\
+Lexical injection detector (abort) & 0.1 [0.0, 0.3] & 5.2 [2.0, 8.9] & 54.4 [49.0, 59.5] & 0.00 [0.00, 0.00] \\
 Task-scoped allowlist (auto) & 10.7 [8.5, 13.0] & 44.5 [39.1, 49.8] & 51.2 [45.3, 56.7] & 0.00 [0.00, 0.00] \\
 Strict info-flow policy (auto) & 2.6 [2.0, 3.2] & 32.4 [26.6, 38.2] & 31.8 [25.5, 38.1] & 0.00 [0.00, 0.00] \\
 Confirm-all (ideal user) & 0.5 [0.3, 0.8] & 48.8 [43.4, 54.1] & 54.4 [49.0, 59.5] & 0.79 [0.61, 1.01] \\

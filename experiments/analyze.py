@@ -76,7 +76,8 @@ def load_episodes() -> pd.DataFrame:
                 for pm, v in r["policies"].items():
                     rows.append({**base, "policy": pm, "u": bool(v["u"]),
                                  "s": (None if v["s"] is None else bool(v["s"])),
-                                 "confirm": v["confirm"], "force": v["force"], "notify": v["notify"]})
+                                 "confirm": v["confirm"], "force": v["force"], "notify": v["notify"],
+                                 "dropped": v.get("dropped", 0)})
     df = pd.DataFrame(rows)
     df["pipeline"] = df["model"]
     df["defence"] = "none"
@@ -739,6 +740,15 @@ def main() -> None:
                       f"\\newcommand{{\\bu{nm}}}{{{100 * r.BU:.1f}}}", f"\\newcommand{{\\ua{nm}}}{{{100 * r.UA:.1f}}}"]
         pmax = dt[dt.comparison.str.contains("protectai|piguard") & (dt.metric == "u")].p_holm.max()
         lines.append(f"\\newcommand{{\\detUtilP}}{{$p={pmax:.3f}$}}" if pmax >= 0.001 else "\\newcommand{\\detUtilP}{$p<.001$}")
+        ben = sub[~sub.attacked]
+        for key, nm in (("protectai_v2:auto", "Pai"), ("piguard:auto", "Pig")):   # benign tasks stopped by an alarm
+            share = (ben[ben.policy == key].dropped > 0).mean()
+            lines.append(f"\\newcommand{{\\stop{nm}}}{{{100 * share:.0f}}}")
+        smin = dt[dt.comparison.str.contains("protectai|piguard") & (dt.metric == "s")].p_holm.min()
+        lines.append(f"\\newcommand{{\\detSecP}}{{{smin:.2f}}}")
+        uo = dt[dt.comparison.str.startswith("clear:oracle") & dt.comparison.str.contains("protectai|piguard")
+                & (dt.metric == "u")].p_holm.max()
+        lines.append(f"\\newcommand{{\\detUtilOP}}{{$p={uo:.3f}$}}" if uo >= 0.001 else "\\newcommand{\\detUtilOP}{$p<.001$}")
         (TAB / "numbers_detectors.tex").write_text("\n".join(lines) + "\n")
     bpiv = core[~core.attacked].pivot_table(index="key", columns="policy", values="confirm", aggfunc="first")
     statsout["interruptions_task_signflip"] = {

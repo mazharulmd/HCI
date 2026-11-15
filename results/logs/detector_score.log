@@ -1,0 +1,28 @@
+3075 unique untrusted outputs
+protectai_v2 sanity (injection, benign): [1.0, 0.0]
+  protectai_v2: 256/2831
+  protectai_v2: 512/2831
+  protectai_v2: 768/2831
+  protectai_v2: 1024/2831
+  protectai_v2: 1280/2831
+  protectai_v2: 1536/2831
+  protectai_v2: 1792/2831
+  protectai_v2: 2048/2831
+  protectai_v2: 2304/2831
+  protectai_v2: 2560/2831
+  protectai_v2: 2816/2831
+  protectai_v2: 2831/2831
+piguard sanity (injection, benign): [1.0, 0.0]
+  piguard: 256/3075
+  piguard: 512/3075
+  piguard: 768/3075
+  piguard: 1024/3075
+  piguard: 1280/3075
+  piguard: 1536/3075
+  piguard: 1792/3075
+  piguard: 2048/3075
+  piguard: 2304/3075
+  piguard: 2560/3075
+  piguard: 2816/3075
+  piguard: 3072/3075
+  piguard: 3075/3075

@@ -53,6 +53,7 @@ Combined-version experiments:
 * **E1, provenance laundering.** Encoding the attacker's value lets lexical lineage (v1) be evaded by 6–8 % of previously successful attacks; decoding-aware lineage (v2) restores 0.6 %. Base64-encoding the whole injection block is closed only by the post-hoc v2.1 fix (4.1 %, equal to the plain block), which is reported separately. See `results/tables/laundering_summary.csv`.
 * **E2, cross-benchmark stress test** on the PROV-Guard-250 and Trust-Boundary-8 scenarios. On the 250 template scenarios, CLEAR keeps full recall while falsely escalating far fewer benign high-privilege calls (20 %) than the Trust-Boundary gate (60 %) and the PROV-Guard engine (100 %). On the 8 argument-free Trust-Boundary fixtures it misses 2 of 4 attacks. See `results/tables/cross_benchmark.csv`.
 * **E3, heterogeneous users** (simulation). The ordering holds in novice-heavy and expert-heavy populations.
+* **Current neural detectors** (ProtectAI DeBERTa-v3 v2 and PIGuard, ACL 2025), replayed as detect-and-abort baselines on a seeded sample of 23 user tasks with all 22 agents (`experiments/detector_baselines.py`). They reach attack success similar to CLEAR (1.02% and 0.65% vs 1.39% on the same episodes; not significantly different), but stop 60% and 51% of benign tasks, so benign utility falls to about 13% against 46.5% for CLEAR. See `results/tables/detectors.csv`.
 
 All numbers are produced by the code in this repository: see `results/stats.json`, `results/tables/` and the manuscript in `paper/main.pdf`.
 

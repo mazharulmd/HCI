@@ -18,6 +18,3 @@ user_study_logs/
 paper/*.spl
 paper/submission_ipm/
 
-# detector run in progress (re-added with the final results)
-results/detectors/scores_*.json.gz
-results/logs/detector_score.log

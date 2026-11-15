@@ -18,16 +18,18 @@ because the title page and cover letter contain the authors' personal details.
 
 | Upload type | File |
 |---|---|
-| Cover letter | `Cover_letter.docx` (or `.pdf`) |
+| Cover letter (with the point-by-point response to the editor) | `Cover_letter_with_response.docx` (or `.pdf`) |
 | Manuscript without author details | `Manuscript_anonymized.docx` or `Manuscript_anonymized.pdf`; LaTeX source in `Manuscript_LaTeX_source.zip` |
 | Highlights | `Highlights.docx` (editable file, 5 bullets of at most 85 characters) |
 | Title page with author details | `Title_page.docx` (or `.pdf`; LaTeX: `Title_page.tex`) |
+| Supplementary material | `Supplementary_reference_verification.csv` (how every reference was verified) |
 
 ## Journal requirements checked
 
 * Abstract of at most 250 words (248).
 * 1–7 keywords (7).
-* Highlights: 3–5 bullets of at most 85 characters.
+* Highlights: 5 bullets of 22–27 words, as the senior editor asked (15–30 words each).
+* References in APA style (apacite); every entry verified (see the supplementary table).
 * Generative-AI declaration placed directly before the references.
 * Data availability statement with the repository link withheld for review.
 * No author-identifying text or document metadata in the manuscript files.
