@@ -20,7 +20,7 @@
 
 **Human-Computer Interaction for Secure AI Tool Usage: Design Patterns Against Prompt Injection.** This repository holds the research code, data, experiments and manuscript.
 
-> **Manuscript:** prepared for *Computers & Security* (Elsevier, `elsarticle` template) in `paper/`. See [`paper/SUBMISSION.md`](paper/SUBMISSION.md) for the submission package and the few items only the author can complete.
+> **Manuscript:** prepared for *Information Processing & Management* (Elsevier, `elsarticle` template, double-anonymized review) in `paper/`. See [`paper/SUBMISSION.md`](paper/SUBMISSION.md) for the submission package.
 
 CLEAR (*Contextual, Lineage-aware, Escalating Agent-action Review*) sits between an LLM agent and its tools. It:
 

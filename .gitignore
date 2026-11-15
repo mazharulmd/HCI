@@ -16,3 +16,4 @@ paper/*.toc
 user_study_logs/
 .DS_Store
 paper/*.spl
+paper/submission_ipm/

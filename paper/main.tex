@@ -1,12 +1,13 @@
 \documentclass[preprint,12pt,authoryear]{elsarticle}
 % ---------------------------------------------------------------------------
-% Manuscript for Computers & Security (Elsevier), elsarticle class, author-year
-% references (elsarticle-harv). All numbers come from generated/*.tex, which are
-% written by experiments/analyze.py and experiments/analyze_v2.py, so results cannot
-% drift from the code. Highlights are also supplied as a separate file
-% (paper/highlights.txt), as the journal requests.
+% Anonymized manuscript for Information Processing & Management (Elsevier;
+% double-anonymized review), elsarticle class, author-year references
+% (elsarticle-harv). Author details, CRediT, funding and competing-interest
+% statements are on the separate title page; highlights are a separate file.
+% All numbers come from generated/*.tex, written by experiments/analyze.py and
+% experiments/analyze_v2.py, so results cannot drift from the code.
 % ---------------------------------------------------------------------------
-\journal{Computers \& Security}
+\journal{Information Processing \& Management}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
@@ -41,13 +42,7 @@
 \title{Provenance-aware, risk-adaptive mediation of AI-agent tool calls against
 indirect prompt injection}
 
-% Author block: replace the placeholders before submission.
-\author[aff1]{[Author name]\corref{cor1}}
-\ead{[corresponding e-mail]}
-\cortext[cor1]{Corresponding author.}
-\affiliation[aff1]{organization={[Department, University]},
-            city={[City]},
-            country={[Country]}}
+% Authors are listed only on the separate title page (double-anonymized review).
 
 \begin{abstract}
 Tool-using AI agents can be hijacked by indirect prompt injection: instructions
@@ -77,18 +72,11 @@ settings. Code, data and a proposed user-study protocol are released; no
 human study has been run.
 \end{abstract}
 
-\begin{highlights}
-\item Provenance-aware mediation decides when an AI agent must ask its user.
-\item Conditional escalation floor: attacker text cannot lower external targets' tier.
-\item Replay of 24,648 real agent trajectories: attack success 16.5\% to 0.7\%.
-\item 51\% fewer approval dialogs than confirming every side-effecting action.
-\item Protection survives detector-evading phrasing and encoded (laundered) values.
-\end{highlights}
 
 \begin{keyword}
-prompt injection \sep LLM agents \sep human-in-the-loop security \sep usable
-security \sep information provenance \sep security warnings \sep habituation \sep
-access control
+prompt injection \sep large language model agents \sep information provenance
+\sep human--AI interaction \sep usable security \sep security warnings \sep
+habituation
 \end{keyword}
 
 \end{frontmatter}
@@ -140,8 +128,11 @@ human is asked, are therefore security-critical design decisions. They have
 received little systematic attention.
 
 \paragraph{This paper.}
-We design and evaluate \clear{}, a human-centred mediation layer that answers
-both questions.
+At its core this is an information-processing problem: an agent turns
+information from documents of mixed trustworthiness into actions, and both the
+agent and its user need to know where each piece of information came from. We
+design and evaluate \clear{}, a human-centred mediation layer that tracks this
+provenance and uses it to answer both questions.
 
 \emph{When to ask.} \clear{} keeps a provenance ledger of everything the agent
 has read and attributes every argument of a proposed tool call to the user's
@@ -1230,25 +1221,12 @@ run the proposed study, evaluate live agents with retry behaviour and optimised 
 envelope compilers that remain injection-proof, and extend lineage to
 multi-agent and computer-use settings.
 
-\section*{CRediT authorship contribution statement}
-\textbf{[Author name]:} Conceptualization, Methodology, Software, Validation,
-Formal analysis, Investigation, Data curation, Writing -- original draft,
-Writing -- review \& editing, Visualization, Project administration.
-
-\section*{Declaration of competing interest}
-The authors declare that they have no known competing financial interests or
-personal relationships that could have appeared to influence the work reported
-in this paper.
-
-\section*{Funding}
-This research did not receive any specific grant from funding agencies in the
-public, commercial, or not-for-profit sectors.
-
 \section*{Data availability}
 All source code, configurations, the tool manifest, derived per-episode and
 per-call datasets, analysis scripts, figures, tests, the interactive console,
 the study materials and the power analysis are available in the project
-repository (\url{https://github.com/mazharulmd/HCI}). The raw trajectories are
+repository; the link is withheld for double-anonymized review and will be added
+on acceptance. The raw trajectories are
 fetched from the AgentDojo repository (MIT licence) at the pinned commit. The
 artefacts of the two earlier iterations are preserved unchanged in
 \texttt{archive/}, and the audit in \cref{sec:lessons} can be reproduced from
@@ -1285,6 +1263,7 @@ the repository).
 \begin{table}[h]
 \centering\footnotesize
 \caption{Per-model held-out results (ASR and BU in \%; dialogs per benign task).}
+\label{tab:permodel}
 \resizebox{\linewidth}{!}{\input{generated/per_model.tex}}
 \end{table}
 
@@ -1293,6 +1272,7 @@ the repository).
 \centering
 \includegraphics[width=0.5\linewidth]{figures/fig_roc.pdf}
 \caption{ROC of the risk score for injected versus benign side-effecting calls (held-out, template attack).}
+\label{fig:roc}
 \end{figure}
 
 \section{Audit of earlier design iterations}

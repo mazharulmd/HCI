@@ -1,63 +1,61 @@
-# Submission package: *Computers & Security* (Elsevier)
+# Submission package: *Information Processing & Management* (Elsevier)
 
-## Why this journal
+The review is **double-anonymized**: the manuscript contains no author names,
+affiliations or identifying links; author details are only on the title page.
 
-*Computers & Security* is the Elsevier journal linked to IFIP TC11 (security and
-privacy protection), which includes a working group on the human aspects of
-security. The paper is a security paper with a human-factors design contribution:
-a defence against prompt injection in AI agents, evaluated on real agent
-trajectories, plus a proposed user study. A human-subject study is not a
-requirement for this journal, whereas HCI journals such as IJHCS or TOCHI would
-expect one. Check the journal's current quartile and impact factor yourself in
-Scopus/SCImago or JCR before submitting.
+## Building the package
 
-## Files to upload
+```bash
+scripts/build_paper.sh                                   # paper/main.pdf (anonymized manuscript)
+python scripts/latex_to_docx.py --out paper/submission_ipm/Manuscript_anonymized.docx
+```
 
-| File | Purpose |
+The upload files (manuscript PDF/DOCX/LaTeX zip, highlights, title page, cover
+letter) are kept in `paper/submission_ipm/`, which is **not** tracked by git,
+because the title page and cover letter contain the authors' personal details.
+
+## Upload checklist (required files on the submission form)
+
+| Upload type | File |
 |---|---|
-| `main.pdf` | manuscript (compiled) |
-| `main.tex`, `references.bib`, `generated/`, `figures/` | LaTeX source (elsarticle class, author-year references) |
-| `highlights.txt` | highlights, 5 bullets of at most 85 characters (required as a separate file) |
-| `cover_letter.md` | cover letter (paste into the submission system) |
+| Cover letter | `Cover_letter.docx` (or `.pdf`) |
+| Manuscript without author details | `Manuscript_anonymized.docx` or `Manuscript_anonymized.pdf`; LaTeX source in `Manuscript_LaTeX_source.zip` |
+| Highlights | `Highlights.docx` (editable file, 5 bullets of at most 85 characters) |
+| Title page with author details | `Title_page.docx` (or `.pdf`; LaTeX: `Title_page.tex`) |
 
-Build from the repository root with `scripts/build_paper.sh`.
-
-## Requirements checked
+## Journal requirements checked
 
 * Abstract of at most 250 words (248).
-* 3–5 highlights of at most 85 characters each (5).
-* 5–10 keywords (8).
-* Declarations: CRediT author contributions, competing interest, funding, data
-  availability, ethics, and the Elsevier statement on generative AI use.
-* Line numbers for reviewers.
+* 1–7 keywords (7).
+* Highlights: 3–5 bullets of at most 85 characters.
+* Generative-AI declaration placed directly before the references.
+* Data availability statement with the repository link withheld for review.
+* No author-identifying text or document metadata in the manuscript files.
 
-Elsevier's own pages could not be opened from the environment where this was
-prepared. These requirements were taken from search results quoting the
-journal's Guide for Authors. Re-check them on the Guide for Authors page when
-you submit.
+Elsevier's own pages could not be opened from the preparation environment; the
+abstract and keyword limits were taken from search results quoting the
+journal's Guide for Authors. Re-check the Guide for Authors when submitting.
 
-## Things only the author can do before submitting
+## Before submitting, the authors must confirm
 
-1. **Author block.** Replace `[Author name]`, `[Department, University]`, `[City]`,
-   `[Country]` and `[corresponding e-mail]` in `main.tex` (front matter and CRediT
-   statement) and in `cover_letter.md`. Add co-authors if there are any.
-2. **Confirm the declarations** in `main.tex`: no competing interests, no specific
-   funding. Change them if they are not true.
-3. **Read the whole manuscript.** The generative-AI declaration states that the
-   authors reviewed and edited the content and take full responsibility for it.
-   That statement must be true when you submit.
-4. **Complete 26 reference entries** that still end in "et al." (their full author
-   lists could not be retrieved from the preparation environment). On a computer
-   with internet access, `python experiments/audit_bibliography.py` writes the
-   author lists it finds to `docs/literature/openalex_metadata_audit.csv`; copy
-   them into the entries with `and others` in `references.bib`, or complete
-   those entries from Google Scholar.
-5. Add an arXiv identifier to the 18 entries whose note only says "arXiv preprint".
+1. Acknowledgements ("None"), funding ("no specific grant") and the competing-interest
+   statement on the title page.
+2. The cover letter's statements that all authors approve the submission and that
+   the manuscript is not under consideration elsewhere.
+3. The generative-AI declaration: it states that the authors reviewed and edited
+   the content and take full responsibility for it, so every author should read
+   the manuscript.
+4. The CRediT author contribution statement is not part of the package because
+   each author's roles must come from the authors; the journal requests it at
+   revision or acceptance.
+5. Optional: 26 bibliography entries still end in "et al." and 18 arXiv entries lack
+   an arXiv identifier (see `references.bib`).
+6. On acceptance, restore the repository link in the data availability statement.
 
 ## What the paper does not claim
 
-* No human participants were studied. The user study is a proposed protocol
-  with an apparatus and a power analysis; every result about people is from a
-  labelled simulation.
+* No human participants were studied. The user study is a proposed protocol with
+  an apparatus and a power analysis; every result about people is from a labelled
+  simulation.
 * No new live LLM runs were made; the evaluation replays recorded AgentDojo
   trajectories.
